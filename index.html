@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Galactic Personnel Database - Coruscant Shadow Node</title>
+    <meta name="title" content="Imperial Citizen Database - Terminal 47-B">
+    <meta name="description" content="Accessing encrypted Galactic Personnel Database. Uploading new dossier.">
+    <meta name="theme-color" content="#ef4444">
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Load html2canvas for Discord image copying -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        /* --- CRT EFFECTS & IMPERIAL THEME --- */
+        :root {
+            --color-primary: #ef4444; /* Imperial Red */
+            --color-secondary: #7f1d1d; /* Dark Red */
+            --color-bg-dark: #0a0a0a;
+            --color-text-muted: #fca5a5;
+        }
+
+        @font-face {
+            font-family: 'Share Tech Mono';
+            src: url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        }
+
+        body {
+            background-color: var(--color-bg-dark);
+            color: var(--color-primary);
+            font-family: 'Share Tech Mono', 'Courier New', Courier, monospace;
+            overflow-x: hidden; 
+            min-height: 100vh;
+        }
+
+        /* CRT Scanline effect */
+        body::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 50;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* Screen flicker */
+        .flicker {
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.98; }
+            50% { opacity: 0.95; }
+            100% { opacity: 1; }
+        }
+
+        .force-wrap {
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+            white-space: pre-wrap !important;
+        }
+
+        /* Input styling */
+        input, select, textarea {
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--color-secondary);
+            color: #fff;
+            outline: none;
+            width: 100%;
+            padding: 0.5rem;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: var(--color-secondary);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-color: var(--color-primary);
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--color-bg-dark);
+            border-left: 1px solid var(--color-secondary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-secondary);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--color-primary);
+        }
+
+        .glitch-hover:hover {
+            animation: textGlitch 0.2s linear infinite;
+        }
+
+        @keyframes textGlitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 1px) }
+            40% { transform: translate(-1px, -1px) }
+            60% { transform: translate(2px, 1px) }
+            80% { transform: translate(1px, -1px) }
+            100% { transform: translate(0) }
+        }
+
+        ::selection {
+            background: var(--color-primary);
+            color: var(--color-bg-dark);
+        }
+
+        .imperial-crest {
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }
+
+        .nav-btn.active {
+            background-color: var(--color-primary);
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* Document Specific Styles */
+        .doc-font {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+        .doc-grid {
+            border-top: 1px solid #000;
+            border-left: 1px solid #000;
+        }
+        .doc-cell {
+            border-right: 1px solid #000;
+            border-bottom: 1px solid #000;
+        }
+        .barcode {
+            font-family: 'Courier New', Courier, monospace;
+            letter-spacing: -2px;
+            font-weight: 900;
+        }
+    </style>
+</head>
+<body class="flicker antialiased p-2 md:p-6 flex items-center justify-center">
+
+    <div id="app" class="w-full max-w-5xl border border-red-800 bg-black/90 relative z-10 shadow-[0_0_30px_rgba(239,68,68,0.15)]">
+        <!-- Content injected via JS -->
+    </div>
+
+<script>
+    let currentState = 'boot'; 
+    let currentFormStep = 1;
+
+    // Default Data Structure
+    const defaultFormData = {
+        name: '', aliases: '', age: '', dob: '', sex: '', gender: '', orientation: '', species: '', homeworld: '', residence: '', occupation: '', affiliation: '', reputation: '', criminalRecord: '',
+        height: '', weight: '', eyeColor: '', skinColor: '', hair: '', build: '', tattoos: '', scars: '', uniqueFeatures: '',
+        talents: '', skills: '', weaknesses: '', weapons: '', armor: '', attire: '',
+        isForceSensitive: 'No', forceAlignment: '', forceAbilities: '', forceMastery: '', lightsaberForms: '',
+        likes: '', dislikes: '', motivations: '', fears: '', mentalIllness: '', personality: '',
+        backstory: '',
+        penisSize: '', breastSize: '', assSize: '', turnOns: '', turnOffs: '', kinks: '', limits: '',
+        writingSample: '', misc: ''
+    };
+
+    // Load from LocalStorage or use default
+    let formData = JSON.parse(localStorage.getItem('sw_dossier_data')) || {...defaultFormData};
+
+    const bootSequence = [
+        "> INITIALIZING HACK SEQUENCE...",
+        "> CONNECTING TO GALACTIC PERSONNEL DATABASE...",
+        "> TRACING HYPERSPACE RELAY NODE... [SUCCESS]",
+        "> BYPASSING IMPERIAL FIREWALL LAYER 1... [SUCCESS]",
+        "> OVERRIDING ENCRYPTION PROTOCOL ALPHA-9... [SUCCESS]",
+        "> <span class='text-yellow-500'>WARNING: INTRUSION DETECTED - SECURITY DRONES DEPLOYED</span>",
+        "> SUPPRESSING ALERTS... [MASKED]",
+        "> FILE RETRIEVED - PERSONNEL DOSSIER LOADED",
+        "> ACCESS GRANTED - TERMINAL 47-B (CORUSCANT SHADOW NODE)"
+    ];
+
+    function renderApp() {
+        const appContainer = document.getElementById('app');
+        
+        let headerHtml = '';
+        if (currentState !== 'boot') {
+            headerHtml = `
+                <div class="border-b border-red-800 p-4 flex justify-between items-center bg-red-950/40">
+                    <div class="flex items-center gap-4">
+                        <div class="imperial-crest w-8 h-8 bg-red-600 flex items-center justify-center">
+                            <div class="imperial-crest w-6 h-6 bg-black"></div>
+                        </div>
+                        <div>
+                            <h1 class="text-lg md:text-xl font-bold tracking-widest text-red-500">IMPERIAL CITIZEN DATABASE</h1>
+                            <p class="text-[10px] text-red-400/70 tracking-[0.2em]">CORUSCANT SHADOW NODE // TERMINAL 47-B</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button onclick="clearDatabase()" class="text-[9px] border border-red-900 px-2 py-1 hover:bg-red-600 hover:text-black transition-colors">WIPE LOCAL CACHE</button>
+                        <div class="text-right hidden sm:block">
+                            <p class="text-xs text-red-500/80 uppercase">YEAR: 17 ABY</p>
+                            <p class="text-[10px] text-red-500/60 uppercase animate-pulse">AUTO-SAVE: ACTIVE</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        appContainer.innerHTML = headerHtml + `<div id="content-area" class="p-4 md:p-8"></div>`;
+        
+        lucide.createIcons();
+        const contentArea = document.getElementById('content-area');
+
+        if (currentState === 'boot') runBootSequence(contentArea);
+        else if (currentState === 'welcome') contentArea.innerHTML = renderWelcome();
+        else if (currentState === 'form') contentArea.innerHTML = renderForm();
+        else if (currentState === 'result') contentArea.innerHTML = renderResult();
+    }
+
+    async function runBootSequence(container) {
+        container.innerHTML = `<div id="boot-text" class="space-y-2 text-sm md:text-base font-mono"></div>`;
+        const bootContainer = document.getElementById('boot-text');
+        
+        for (let i = 0; i < bootSequence.length; i++) {
+            await new Promise(r => setTimeout(r, Math.random() * 300 + 100));
+            bootContainer.innerHTML += `<div>${bootSequence[i]}</div>`;
+        }
+        
+        await new Promise(r => setTimeout(r, 600));
+        setState('welcome');
+    }
+
+    function renderWelcome() {
+        return `
+            <div class="space-y-8 max-w-2xl mx-auto py-8">
+                <div class="text-center space-y-4">
+                    <i data-lucide="database" class="mx-auto text-red-600 w-16 h-16 opacity-80 mb-4"></i>
+                    <h2 class="text-2xl font-bold text-center tracking-[0.2em] border-b border-red-800/50 pb-4 text-white">PERSONNEL FILE INJECTION</h2>
+                    <p class="text-sm leading-relaxed text-red-400">
+                        Welcome, Slicer. You have bypassed the primary security nodes. 
+                        Use this interface to inject a new identity into the Galactic Personnel Database. 
+                        Progress is automatically cached to your local terminal station.
+                    </p>
+                </div>
+                
+                <div class="bg-red-950/20 border border-red-900/50 p-4 text-xs text-red-300 space-y-2 font-mono">
+                    <p>> FILE INTEGRITY: 98.7%</p>
+                    <p>> LAST ACCESSED: 17 ABY 03.18</p>
+                    <p>> CACHED DATA FOUND: ${Object.values(formData).some(v => v !== '') ? 'YES' : 'NO'}</p>
+                </div>
+
+                <div class="pt-8 flex justify-center">
+                    <button onclick="setState('form')" class="px-8 py-3 bg-red-950 hover:bg-red-600 hover:text-black transition-colors border border-red-600 font-bold tracking-[0.2em] glitch-hover flex items-center gap-3 shadow-[0_0_15px_rgba(239,68,68,0.2)] text-sm">
+                        INITIALIZE OVERRIDE <i data-lucide="terminal" width="18"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderForm() {
+        return `
+            <div class="space-y-6">
+                <!-- Form Navigation -->
+                <div class="flex flex-wrap border-b border-red-900 pb-2 gap-2 text-xs md:text-sm tracking-widest">
+                    <button onclick="currentFormStep=1; renderApp()" class="nav-btn px-3 py-1 border border-red-900 hover:bg-red-900/50 ${currentFormStep===1 ? 'active' : 'text-red-500'}">1. GENERAL</button>
+                    <button onclick="currentFormStep=2; renderApp()" class="nav-btn px-3 py-1 border border-red-900 hover:bg-red-900/50 ${currentFormStep===2 ? 'active' : 'text-red-500'}">2. PHYSICAL & GEAR</button>
+                    <button onclick="currentFormStep=3; renderApp()" class="nav-btn px-3 py-1 border border-red-900 hover:bg-red-900/50 ${currentFormStep===3 ? 'active' : 'text-red-500'}">3. PSYCH & FORCE</button>
+                    <button onclick="currentFormStep=4; renderApp()" class="nav-btn px-3 py-1 border border-red-900 hover:bg-red-900/50 ${currentFormStep===4 ? 'active' : 'text-red-500'}">4. BACKGROUND</button>
+                    <button onclick="currentFormStep=5; renderApp()" class="nav-btn px-3 py-1 border border-red-900 hover:bg-red-900/50 ${currentFormStep===5 ? 'active' : 'text-red-500'}">5. RESTRICTED/NSFW</button>
+                </div>
+
+                <div class="h-[60vh] overflow-y-auto pr-2 space-y-6">
+                    ${getFormStepContent()}
+                </div>
+
+                <div class="pt-4 border-t border-red-900 flex justify-between items-center">
+                    <span class="text-xs text-red-500/50">STEP ${currentFormStep} OF 5</span>
+                    <div class="space-x-4">
+                        ${currentFormStep > 1 ? `<button onclick="currentFormStep--; renderApp()" class="px-4 py-2 border border-red-800 text-red-500 hover:bg-red-900/30 text-xs tracking-widest">PREV</button>` : ''}
+                        ${currentFormStep < 5 ? `<button onclick="currentFormStep++; renderApp()" class="px-6 py-2 bg-red-800/20 border border-red-500 text-red-400 hover:bg-red-600 hover:text-black text-xs tracking-widest font-bold">NEXT</button>` : ''}
+                        ${currentFormStep === 5 ? `<button onclick="generateDossier()" class="px-6 py-2 bg-red-600 text-black border border-red-500 hover:bg-white text-xs tracking-widest font-bold glitch-hover shadow-[0_0_10px_rgba(239,68,68,0.5)]">INJECT DOSSIER</button>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function createInput(label, id, placeholder, type='text', isTextarea=false) {
+        const val = formData[id] || '';
+        const baseClass = "w-full bg-black/50 border border-red-900/70 text-red-100 p-2 text-sm focus:border-red-500 focus:bg-red-950/20 outline-none transition-colors";
+        const inputHtml = isTextarea 
+            ? `<textarea id="${id}" rows="3" placeholder="${placeholder}" class="${baseClass} resize-y" oninput="updateData('${id}', this.value)">${val}</textarea>`
+            : `<input type="${type}" id="${id}" placeholder="${placeholder}" class="${baseClass}" value="${val}" oninput="updateData('${id}', this.value)" />`;
+        
+        return `
+            <div class="space-y-1">
+                <label class="block text-[10px] uppercase tracking-widest text-red-500/80">> ${label}</label>
+                ${inputHtml}
+            </div>
+        `;
+    }
+
+    function updateData(key, value) {
+        formData[key] = value;
+        localStorage.setItem('sw_dossier_data', JSON.stringify(formData));
+        if(key === 'isForceSensitive') renderApp(); 
+    }
+
+    function clearDatabase() {
+        if(confirm("DANGER: This will permanently wipe your cached dossier progress. Continue?")) {
+            localStorage.removeItem('sw_dossier_data');
+            formData = {...defaultFormData};
+            renderApp();
+        }
+    }
+
+    function getFormStepContent() {
+        switch(currentFormStep) {
+            case 1:
+                return `
+                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mb-4 tracking-widest"><i data-lucide="user" class="inline w-4 h-4 mr-2"></i>GENERAL INFORMATION</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${createInput('Full Name', 'name', '[First and Last]')}
+                        ${createInput('Alias(es)', 'aliases', '[Nicknames or titles]')}
+                        ${createInput('Age', 'age', '[How old are they?]')}
+                        ${createInput('D.O.B.', 'dob', '[Current year is 17 ABY]')}
+                        ${createInput('Sex', 'sex', '[Biological sex]')}
+                        ${createInput('Gender', 'gender', '[Identity]')}
+                        ${createInput('Sexual Orientation', 'orientation', '[Attraction]')}
+                        ${createInput('Species', 'species', '[No player-made species]')}
+                        ${createInput('Homeworld', 'homeworld', '[Planet of birth]')}
+                        ${createInput('Residence', 'residence', '[Current location]')}
+                        ${createInput('Occupation', 'occupation', '[Profession]')}
+                        ${createInput('Affiliation', 'affiliation', '[New Republic, Empire, Jedi, etc.]')}
+                    </div>
+                    ${createInput('Galactic Reputation', 'reputation', '[What does the Galaxy know you for?]', 'text', true)}
+                    ${createInput('Criminal Record', 'criminalRecord', '[Committed crimes, if any]', 'text', true)}
+                `;
+            case 2:
+                return `
+                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mb-4 tracking-widest"><i data-lucide="scan-line" class="inline w-4 h-4 mr-2"></i>PHYSICAL & EQUIPMENT</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${createInput('Height', 'height', '[Imperial and Metric]')}
+                        ${createInput('Weight', 'weight', '[Imperial and Metric]')}
+                        ${createInput('Eye Color', 'eyeColor', '[Color]')}
+                        ${createInput('Skin Color', 'skinColor', '[Color]')}
+                        ${createInput('Hair', 'hair', '[Color and Style]')}
+                        ${createInput('Body Build', 'build', '[Skinny, muscular, etc.]')}
+                        ${createInput('Tattoos', 'tattoos', '[Description of tattoos]')}
+                        ${createInput('Scars', 'scars', '[Description of scars]')}
+                    </div>
+                    ${createInput('Unique Features', 'uniqueFeatures', '[Birthmarks, cybernetics, etc.]', 'text', true)}
+                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mt-6 mb-4 tracking-widest"><i data-lucide="crosshair" class="inline w-4 h-4 mr-2"></i>ABILITIES & GEAR</h3>
+                    ${createInput('Talents', 'talents', '[Intelligence, Charisma, Tech Wizard, etc.]', 'text', true)}
+                    ${createInput('Skills', 'skills', '[Specific trainable skills]', 'text', true)}
+                    ${createInput('Weaknesses', 'weaknesses', '[Flaws, physical limitations]', 'text', true)}
+                    ${createInput('Weapons', 'weapons', '[Blasters, vibroblades, etc.]', 'text', true)}
+                    ${createInput('Armor', 'armor', '[Armor type/description]', 'text', true)}
+                    ${createInput('Attire', 'attire', '[Casual/formal clothing]', 'text', true)}
+                `;
+            case 3:
+                const forceStyle = formData.isForceSensitive === 'Yes' ? 'block' : 'hidden';
+                return `
+                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mb-4 tracking-widest"><i data-lucide="brain" class="inline w-4 h-4 mr-2"></i>PSYCHOLOGY</h3>
+                    ${createInput('Likes', 'likes', '[Must have at least 3 likes]', 'text', true)}
+                    ${createInput('Dislikes', 'dislikes', '[Must have at least 3 dislikes]', 'text', true)}
+                    ${createInput('Motivations', 'motivations', '[Need at least 2 motivations]', 'text', true)}
+                    ${createInput('Fears', 'fears', '[Must have at least 1 fear. Nobody is truly fearless]', 'text', true)}
+                    ${createInput('Mental Illness', 'mentalIllness', '[Any psychological conditions]', 'text', true)}
+                    ${createInput('Personality', 'personality', '[Must be at least 2 paragraphs long]', 'text', true)}
+                    
+                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mt-6 mb-4 tracking-widest"><i data-lucide="swords" class="inline w-4 h-4 mr-2"></i>FORCE SENSITIVITY</h3>
+                    <div class="space-y-1 mb-4">
+                        <label class="block text-[10px] uppercase tracking-widest text-red-500/80">> Is Subject Force Sensitive?</label>
+                        <select id="isForceSensitive" class="w-full bg-black/50 border border-red-900/70 text-red-100 p-2 text-sm focus:border-red-500 outline-none" onchange="updateData('isForceSensitive', this.value)">
+                            <option value="No" ${formData.isForceSensitive === 'No' ? 'selected' : ''}>No</option>
+                            <option value="Yes" ${formData.isForceSensitive === 'Yes' ? 'selected' : ''}>Yes</option>
+                        </select>
+                    </div>
+                    <div class="${forceStyle} space-y-4 bg-red-950/10 p-4 border border-red-900/50">
+                        ${createInput('Force Alignment', 'forceAlignment', '[Light, Neutral, Dark]')}
+                        ${createInput('Force Abilities', 'forceAbilities', '[Specific powers known]', 'text', true)}
+                        ${createInput('Mastery Level', 'forceMastery', '[Padawan, Knight, Master, Sith Lord, etc.]')}
+                        ${createInput('Lightsaber Forms', 'lightsaberForms', '[Forms known]', 'text', true)}
+                    </div>
+                `;
+            case 4:
+                return `
+                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mb-4 tracking-widest"><i data-lucide="book-open" class="inline w-4 h-4 mr-2"></i>BACKGROUND</h3>
+                    <div class="bg-red-900/10 border-l-2 border-red-600 p-3 mb-4 text-xs text-red-300">
+                        * Required: 3 paragraphs minimum. (5 paragraphs minimum for Force Users, Mandalorians, or significant figures).
+                    </div>
+                    ${createInput('Backstory', 'backstory', '[Enter detailed backstory here...]', 'text', true)}
+                    <div class="mt-6">
+                        ${createInput('Miscellaneous Notes', 'misc', '[Optional extra information...]', 'text', true)}
+                    </div>
+                    <div class="mt-6">
+                        ${createInput('Writing Sample', 'writingSample', '[Optional unless Force Sensitive/Mando/Important Role. Provide a sample of your RP writing.]', 'text', true)}
+                    </div>
+                `;
+            case 5:
+                return `
+                    <h3 class="text-red-500 border-b border-red-900/50 pb-2 mb-4 tracking-widest font-bold flex items-center">
+                        <i data-lucide="alert-triangle" class="inline w-4 h-4 mr-2"></i>RESTRICTED PROTOCOLS (NSFW)
+                    </h3>
+                    <div class="bg-red-950 border border-red-800 p-4 mb-6 text-xs text-red-200 shadow-inner">
+                        > WARNING: Biological & psychological intimacy metrics are classified. <br>
+                        > These fields are dictated by Imperial Form Templates but are optional for standard deployment.
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        ${createInput('Penis Size', 'penisSize', '[Measurement]')}
+                        ${createInput('Breast Size', 'breastSize', '[Measurement]')}
+                        ${createInput('Ass Size', 'assSize', '[Measurement]')}
+                    </div>
+                    ${createInput('Turn Ons', 'turnOns', '[List preferences]', 'text', true)}
+                    ${createInput('Turn Offs', 'turnOffs', '[List aversions]', 'text', true)}
+                    ${createInput('Kinks', 'kinks', '[List specific kinks]', 'text', true)}
+                    ${createInput('Limits', 'limits', '[Hard limits]', 'text', true)}
+                `;
+        }
+    }
+
+    function generateDossier() {
+        if (!formData.name) formData.name = 'UNKNOWN SUBJECT';
+        setState('result');
+    }
+
+    function renderDocField(label, value, cols = 1, isTextarea = false) {
+        if (!value) return '';
+        let colClass = 'col-span-1';
+        if (cols === 2) colClass = 'col-span-1 md:col-span-2';
+        if (cols === 3) colClass = 'col-span-1 md:col-span-3';
+        if (cols === 4) colClass = 'col-span-1 md:col-span-4';
+
+        return `
+            <div class="${colClass} doc-cell p-2 bg-white flex flex-col justify-start break-inside-avoid">
+                <span class="text-[9px] uppercase font-bold text-gray-500 tracking-wider mb-1">${label}</span>
+                <span class="text-sm font-medium text-black break-words ${isTextarea ? 'whitespace-pre-wrap leading-relaxed' : ''}">${value}</span>
+            </div>
+        `;
+    }
+
+    function renderResult() {
+        const idNum = Math.floor(Math.random() * 90000000) + 10000000;
+        
+        return `
+            <div class="space-y-6 pb-10">
+                <!-- Physical Document Container -->
+                <div id="capture-zone" class="bg-[#fafafa] text-black p-8 md:p-12 relative shadow-2xl mx-auto max-w-4xl border-[12px] border-gray-900 doc-font">
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] overflow-hidden">
+                        <div class="imperial-crest w-[800px] h-[800px] bg-black"></div>
+                    </div>
+
+                    <div class="relative z-10">
+                        <!-- HEADER -->
+                        <div class="flex flex-col sm:flex-row justify-between items-start border-b-4 border-black pb-6 mb-6">
+                            <div class="flex items-center gap-6">
+                                <div class="imperial-crest w-16 h-16 bg-black flex items-center justify-center">
+                                    <div class="imperial-crest w-12 h-12 bg-white flex items-center justify-center">
+                                        <div class="imperial-crest w-8 h-8 bg-black"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h1 class="text-3xl md:text-4xl font-black tracking-tighter uppercase leading-none mb-1">Galactic Empire</h1>
+                                    <h2 class="text-xs md:text-sm font-bold tracking-[0.2em] text-gray-600 uppercase">Imperial Security Bureau // Form 47-B</h2>
+                                    <h3 class="text-xl font-bold mt-2 uppercase tracking-wide">Personnel Dossier</h3>
+                                </div>
+                            </div>
+                            <div class="text-right flex flex-col items-end mt-4 sm:mt-0">
+                                <div class="text-2xl barcode text-black mb-1">|| |||| | || | ||| |</div>
+                                <div class="text-[10px] font-bold uppercase border-2 border-black px-3 py-1 bg-red-600 text-white tracking-widest">
+                                    Classified Level 5
+                                </div>
+                                <div class="text-[10px] font-bold mt-2 text-gray-500 uppercase">ID: ${idNum}</div>
+                            </div>
+                        </div>
+
+                        <!-- 1. BIOGRAPHICAL DATA -->
+                        <div class="mb-6">
+                            <h3 class="text-sm font-black uppercase bg-black text-white py-1 px-3 inline-block mb-2 tracking-widest">1. Biographical Data</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-4 doc-grid">
+                                ${renderDocField('Full Name', formData.name, 2)}
+                                ${renderDocField('Aliases', formData.aliases, 2)}
+                                ${renderDocField('Age', formData.age, 1)}
+                                ${renderDocField('D.O.B.', formData.dob, 1)}
+                                ${renderDocField('Sex', formData.sex, 1)}
+                                ${renderDocField('Gender', formData.gender, 1)}
+                                ${renderDocField('Species', formData.species, 2)}
+                                ${renderDocField('Homeworld', formData.homeworld, 2)}
+                                ${renderDocField('Residence', formData.residence, 2)}
+                                ${renderDocField('Orientation', formData.orientation, 2)}
+                                ${renderDocField('Occupation', formData.occupation, 4)}
+                                ${renderDocField('Affiliation', formData.affiliation, 4)}
+                            </div>
+                        </div>
+
+                        <!-- 2. PHYSICAL CHARACTERISTICS -->
+                        <div class="mb-6">
+                            <h3 class="text-sm font-black uppercase bg-black text-white py-1 px-3 inline-block mb-2 tracking-widest">2. Physical Profile</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-4 doc-grid">
+                                ${renderDocField('Height', formData.height, 1)}
+                                ${renderDocField('Weight', formData.weight, 1)}
+                                ${renderDocField('Eye Color', formData.eyeColor, 1)}
+                                ${renderDocField('Skin Color', formData.skinColor, 1)}
+                                ${renderDocField('Hair', formData.hair, 2)}
+                                ${renderDocField('Body Build', formData.build, 2)}
+                                ${renderDocField('Tattoos / Marks', formData.tattoos, 4, true)}
+                                ${renderDocField('Scars', formData.scars, 4, true)}
+                                ${renderDocField('Unique Features', formData.uniqueFeatures, 4, true)}
+                            </div>
+                        </div>
+
+                        <!-- 3. CAPABILITIES & EQUIPMENT -->
+                        <div class="mb-6">
+                            <h3 class="text-sm font-black uppercase bg-black text-white py-1 px-3 inline-block mb-2 tracking-widest">3. Capabilities & Equipment</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-4 doc-grid">
+                                ${renderDocField('Known Talents', formData.talents, 2, true)}
+                                ${renderDocField('Trained Skills', formData.skills, 2, true)}
+                                ${renderDocField('Known Weaknesses', formData.weaknesses, 4, true)}
+                                ${renderDocField('Primary Weapons', formData.weapons, 2, true)}
+                                ${renderDocField('Armor / Protection', formData.armor, 2, true)}
+                                ${renderDocField('Standard Attire', formData.attire, 4, true)}
+                            </div>
+                        </div>
+
+                        <!-- 4. PSYCHOLOGICAL PROFILE -->
+                        <div class="mb-6">
+                            <h3 class="text-sm font-black uppercase bg-black text-white py-1 px-3 inline-block mb-2 tracking-widest">4. Psychological Eval</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-4 doc-grid">
+                                ${renderDocField('Likes', formData.likes, 2, true)}
+                                ${renderDocField('Dislikes', formData.dislikes, 2, true)}
+                                ${renderDocField('Motivations', formData.motivations, 2, true)}
+                                ${renderDocField('Fears', formData.fears, 2, true)}
+                                ${renderDocField('Mental Illness / Conditions', formData.mentalIllness, 4, true)}
+                                ${renderDocField('Detailed Personality Assessment', formData.personality, 4, true)}
+                            </div>
+                        </div>
+
+                        <!-- 5. FORCE SENSITIVITY -->
+                        ${formData.isForceSensitive === 'Yes' ? `
+                            <div class="mb-6 border-4 border-gray-400 p-2 relative">
+                                <div class="absolute -top-3 left-4 bg-[#fafafa] px-2 text-xs font-bold text-gray-600 uppercase tracking-widest">Warning: Force Sensitive</div>
+                                <h3 class="text-sm font-black uppercase bg-gray-300 text-black py-1 px-3 inline-block mb-2 mt-2 tracking-widest">5. Force Attunement</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-4 doc-grid">
+                                    ${renderDocField('Alignment', formData.forceAlignment, 2)}
+                                    ${renderDocField('Mastery Level', formData.forceMastery, 2)}
+                                    ${renderDocField('Known Abilities', formData.forceAbilities, 4, true)}
+                                    ${renderDocField('Lightsaber Forms', formData.lightsaberForms, 4, true)}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- 6. HISTORICAL RECORD -->
+                        <div class="mb-6">
+                            <h3 class="text-sm font-black uppercase bg-black text-white py-1 px-3 inline-block mb-2 tracking-widest">6. Historical Record & Background</h3>
+                            <div class="grid grid-cols-1 doc-grid">
+                                ${renderDocField('Galactic Reputation', formData.reputation, 1, true)}
+                                ${renderDocField('Criminal Record', formData.criminalRecord, 1, true)}
+                                ${renderDocField('Full Backstory', formData.backstory, 1, true)}
+                            </div>
+                        </div>
+
+                        <!-- 7. ADDENDUM -->
+                        ${(formData.penisSize || formData.turnOns || formData.misc || formData.writingSample) ? `
+                            <div class="mb-6">
+                                <h3 class="text-sm font-black uppercase bg-gray-200 text-gray-800 py-1 px-3 inline-block mb-2 tracking-widest">7. Addendum / Restricted Metrics</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 doc-grid">
+                                    ${renderDocField('Penis Size', formData.penisSize, 1)}
+                                    ${renderDocField('Breast Size', formData.breastSize, 1)}
+                                    ${renderDocField('Ass Size', formData.assSize, 1)}
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 doc-grid mt-4">
+                                    ${renderDocField('Turn Ons', formData.turnOns, 1, true)}
+                                    ${renderDocField('Turn Offs', formData.turnOffs, 1, true)}
+                                    ${renderDocField('Kinks', formData.kinks, 1, true)}
+                                    ${renderDocField('Limits', formData.limits, 1, true)}
+                                </div>
+                                <div class="grid grid-cols-1 doc-grid mt-4">
+                                    ${renderDocField('Miscellaneous Notes', formData.misc, 1, true)}
+                                    ${renderDocField('Writing Sample / Transcript', formData.writingSample, 1, true)}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- FOOTER -->
+                        <div class="border-t-4 border-black pt-4 mt-8 flex justify-between items-end">
+                            <div class="text-[10px] font-bold uppercase text-gray-500 tracking-widest">
+                                <p>Form Authorized by: Coruscant Central Node</p>
+                                <p>Date: 17 ABY</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="w-48 border-b-2 border-black mb-1 h-8 bg-[url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"30\"><path d=\"M10 20 Q 30 5 50 20 T 90 20\" fill=\"none\" stroke=\"black\" stroke-width=\"2\"/></svg>')] bg-no-repeat bg-center opacity-40"></div>
+                                <p class="text-[9px] uppercase font-bold text-gray-600">Authorized Signature</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 pt-6 max-w-4xl mx-auto">
+                    <button onclick="currentFormStep=1; setState('form')" class="flex-1 py-3 border border-red-800 text-red-500 uppercase font-bold text-xs hover:bg-red-900/30 transition-colors tracking-widest"><i data-lucide="edit-3" class="inline w-4 h-4 mr-2"></i>Edit Dossier</button>
+                    <button onclick="copyToDiscord()" id="copy-btn" class="flex-1 py-3 bg-red-600 text-black uppercase font-bold text-xs hover:bg-white transition-all shadow-[0_0_15px_rgba(239,68,68,0.4)] tracking-widest flex items-center justify-center"><i data-lucide="printer" class="inline w-4 h-4 mr-2"></i>Print to Datapad (Export)</button>
+                </div>
+                <div id="copy-status" class="text-center text-sm font-bold opacity-0 transition-opacity mt-4 tracking-widest"></div>
+            </div>
+        `;
+    }
+
+    function setState(newState) { 
+        currentState = newState; 
+        renderApp(); 
+        if (newState === 'result') {
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+    }
+
+    async function copyToDiscord() {
+        const btn = document.getElementById('copy-btn');
+        const target = document.getElementById('capture-zone');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `<i data-lucide="loader" class="inline w-4 h-4 mr-2 animate-spin"></i>PRINTING...`;
+        btn.disabled = true;
+
+        try {
+            await new Promise(r => setTimeout(r, 100));
+            const canvas = await html2canvas(target, { 
+                backgroundColor: '#ffffff', 
+                scale: 2,
+                useCORS: true,
+                logging: false
+            });
+            
+            canvas.toBlob(async (blob) => {
+                try {
+                    const item = new ClipboardItem({ "image/png": blob });
+                    await navigator.clipboard.write([item]);
+                    showStatus("DOCUMENT TRANSFERRED TO CLIPBOARD", "text-green-500");
+                } catch {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = `Imperial_Dossier_${formData.name.replace(/\s+/g, '_') || 'Subject'}.png`;
+                    link.href = url;
+                    link.click();
+                    showStatus("CLIPBOARD BLOCKED. DOCUMENT DOWNLOADED.", "text-yellow-500");
+                }
+            });
+        } catch(err) {
+            console.error(err);
+            showStatus("PRINTING ERROR.", "text-red-500");
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            lucide.createIcons();
+        }
+    }
+
+    function showStatus(msg, cls) {
+        const status = document.getElementById('copy-status');
+        if(!status) return;
+        status.textContent = msg;
+        status.className = `text-center text-xs font-bold uppercase mt-4 transition-opacity opacity-100 ${cls} tracking-widest`;
+        setTimeout(() => status.classList.replace('opacity-100', 'opacity-0'), 4000);
+    }
+
+    document.addEventListener('DOMContentLoaded', renderApp);
+</script>
+</body>
+</html>
