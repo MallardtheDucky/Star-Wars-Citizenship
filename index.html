@@ -22,7 +22,7 @@
     <link href="https://fonts.cdnfonts.com/css/aurebesh" rel="stylesheet">
 
     <style>
-        /* --- CRT EFFECTS & IMPERIAL THEME --- */
+        /* --- IMPERIAL THEME --- */
         :root {
             --color-primary: #ef4444; /* Imperial Red */
             --color-secondary: #7f1d1d; /* Dark Red */
@@ -47,7 +47,7 @@
             min-height: 100vh;
         }
 
-        /* CRT Scanline effect */
+        /* CRT Scanline effect (Non-flickering) */
         body::after {
             content: " ";
             display: block;
@@ -56,21 +56,10 @@
             left: 0;
             bottom: 0;
             right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
             z-index: 50;
             background-size: 100% 2px, 3px 100%;
             pointer-events: none;
-        }
-
-        /* Screen flicker */
-        .flicker {
-            animation: flicker 0.15s infinite;
-        }
-
-        @keyframes flicker {
-            0% { opacity: 0.98; }
-            50% { opacity: 0.95; }
-            100% { opacity: 1; }
         }
 
         .force-wrap {
@@ -179,7 +168,7 @@
         }
     </style>
 </head>
-<body class="flicker antialiased p-2 md:p-6 flex items-start md:items-center justify-center">
+<body class="antialiased p-2 md:p-6 flex items-start md:items-center justify-center">
 
     <div id="app" class="w-full max-w-5xl border border-red-800 bg-black/90 relative z-10 shadow-[0_0_30px_rgba(239,68,68,0.15)] my-4 md:my-0">
         <!-- Content injected via JS -->
@@ -212,8 +201,8 @@
         "> ROUTING THROUGH ENDOR RELAY SUB-NODE... [SECURE]",
         "> INITIATING SCOMP LINK OVERRIDE...",
         "> BYPASSING ISB FIREWALL LAYER 1... [SUCCESS]",
-        "> DECRYPTING DATACRON ARCHIVES... [WARNING: TRACE DETECTED]",
-        "> <span class='text-yellow-500'>SPOOFING MAC ADDRESS. DEPLOYING COUNTER-MEASURES.</span>",
+        "> DECRYPTING DATACRON ARCHIVES... [COMPLETED]",
+        "> SPOOFING MAC ADDRESS. DEPLOYING COUNTER-MEASURES.",
         "> FILE RETRIEVED - IMPERIAL SECURITY BUREAU DOSSIER LOADED",
         "> ACCESS GRANTED - TERMINAL 47-B (CORUSCANT SHADOW NODE)"
     ];
@@ -242,7 +231,7 @@
                         <button onclick="clearDatabase()" class="p-1 border border-red-900 hover:bg-red-600 hover:text-black transition-colors sm:hidden" title="Wipe Local Cache"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         <div class="text-right hidden md:block">
                             <p class="text-xs text-red-500/80 uppercase">YEAR: 17 ABY</p>
-                            <p class="text-[10px] text-red-500/60 uppercase animate-pulse">AUTO-SAVE: ACTIVE</p>
+                            <p class="text-[10px] text-red-500/60 uppercase">AUTO-SAVE: ACTIVE</p>
                         </div>
                     </div>
                 </div>
@@ -265,11 +254,11 @@
         const bootContainer = document.getElementById('boot-text');
         
         for (let i = 0; i < bootSequence.length; i++) {
-            await new Promise(r => setTimeout(r, Math.random() * 300 + 100));
+            await new Promise(r => setTimeout(r, 200));
             bootContainer.innerHTML += `<div>${bootSequence[i]}</div>`;
         }
         
-        await new Promise(r => setTimeout(r, 600));
+        await new Promise(r => setTimeout(r, 400));
         setState('welcome');
     }
 
@@ -749,7 +738,7 @@
                                     <span>7. Deep Cover Metrics / Eugenics Form 88-X</span>
                                     <span class="text-[8px] text-red-300">RESTRICTED</span>
                                 </h3>
-                                <div class="grid grid-cols-1 md:grid-cols-3 doc-grid border-red-900 bg-white">
+                                <div class="grid grid-cols-1 md:grid-cols-3 doc-grid border-red-900 bg-white mt-2">
                                     <div class="col-span-1 doc-cell p-2 border-red-900 flex flex-col">
                                         <span class="text-[9px] uppercase font-bold text-red-700 tracking-wider mb-1">Genital Metrics (M)</span>
                                         <span class="text-xs md:text-sm font-medium text-black break-words">${formData.penisSize || 'N/A'}</span>
