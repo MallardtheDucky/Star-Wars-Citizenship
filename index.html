@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <title>Galactic Personnel Database - Coruscant Shadow Node</title>
-    <meta name="title" content="Imperial Citizen Database - Terminal 47-B">
+    <title>ISB Personnel Database - Coruscant Shadow Node</title>
+    <meta name="title" content="Imperial Security Bureau - Terminal 47-B">
     <meta name="description" content="Accessing encrypted Galactic Personnel Database. Uploading new dossier.">
     <meta name="theme-color" content="#ef4444">
     
@@ -17,6 +17,9 @@
 
     <!-- Load html2canvas for Discord image copying -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Aurebesh Font -->
+    <link href="https://fonts.cdnfonts.com/css/aurebesh" rel="stylesheet">
 
     <style>
         /* --- CRT EFFECTS & IMPERIAL THEME --- */
@@ -30,6 +33,10 @@
         @font-face {
             font-family: 'Share Tech Mono';
             src: url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        }
+
+        .aurebesh {
+            font-family: 'Aurebesh', sans-serif;
         }
 
         body {
@@ -86,6 +93,7 @@
 
         input::placeholder, textarea::placeholder {
             color: var(--color-secondary);
+            opacity: 0.5;
         }
 
         input:focus, select:focus, textarea:focus {
@@ -95,19 +103,10 @@
         }
 
         /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--color-bg-dark);
-            border-left: 1px solid var(--color-secondary);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--color-secondary);
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--color-primary);
-        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--color-bg-dark); border-left: 1px solid var(--color-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--color-secondary); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
 
         .glitch-hover:hover {
             animation: textGlitch 0.2s linear infinite;
@@ -154,11 +153,28 @@
             letter-spacing: -2px;
             font-weight: 900;
         }
+        
+        .isb-stamp {
+            border: 4px solid #dc2626;
+            color: #dc2626;
+            padding: 0.25rem 0.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            transform: rotate(-12deg);
+            display: inline-block;
+            font-size: 1.5rem;
+            letter-spacing: 0.1em;
+            opacity: 0.7;
+            mix-blend-mode: multiply;
+            position: absolute;
+            pointer-events: none;
+            z-index: 20;
+        }
     </style>
 </head>
-<body class="flicker antialiased p-2 md:p-6 flex items-center justify-center">
+<body class="flicker antialiased p-2 md:p-6 flex items-start md:items-center justify-center">
 
-    <div id="app" class="w-full max-w-5xl border border-red-800 bg-black/90 relative z-10 shadow-[0_0_30px_rgba(239,68,68,0.15)]">
+    <div id="app" class="w-full max-w-5xl border border-red-800 bg-black/90 relative z-10 shadow-[0_0_30px_rgba(239,68,68,0.15)] my-4 md:my-0">
         <!-- Content injected via JS -->
     </div>
 
@@ -168,9 +184,11 @@
 
     // Default Data Structure
     const defaultFormData = {
-        name: '', aliases: '', age: '', dob: '', sex: '', gender: '', orientation: '', species: '', homeworld: '', residence: '', occupation: '', affiliation: '', reputation: '', criminalRecord: '',
-        height: '', weight: '', eyeColor: '', skinColor: '', hair: '', build: '', tattoos: '', scars: '', uniqueFeatures: '',
+        name: '', aliases: '', age: '', dob: '', sex: '', gender: '', orientation: '', species: '', homeworld: '', residence: '', occupation: '', affiliation: '', threatLevel: 'LOW', bounty: '', languages: 'Galactic Basic',
+        reputation: '', criminalRecord: '',
+        height: '', weight: '', eyeColor: '', skinColor: '', hair: '', build: '', tattoos: '', scars: '', uniqueFeatures: '', cybernetics: '',
         talents: '', skills: '', weaknesses: '', weapons: '', armor: '', attire: '',
+        shipName: '', shipClass: '',
         isForceSensitive: 'No', forceAlignment: '', forceAbilities: '', forceMastery: '', lightsaberForms: '',
         likes: '', dislikes: '', motivations: '', fears: '', mentalIllness: '', personality: '',
         backstory: '',
@@ -179,17 +197,16 @@
     };
 
     // Load from LocalStorage or use default
-    let formData = JSON.parse(localStorage.getItem('sw_dossier_data')) || {...defaultFormData};
+    let formData = JSON.parse(localStorage.getItem('sw_dossier_data_v2')) || {...defaultFormData};
 
     const bootSequence = [
-        "> INITIALIZING HACK SEQUENCE...",
-        "> CONNECTING TO GALACTIC PERSONNEL DATABASE...",
-        "> TRACING HYPERSPACE RELAY NODE... [SUCCESS]",
-        "> BYPASSING IMPERIAL FIREWALL LAYER 1... [SUCCESS]",
-        "> OVERRIDING ENCRYPTION PROTOCOL ALPHA-9... [SUCCESS]",
-        "> <span class='text-yellow-500'>WARNING: INTRUSION DETECTED - SECURITY DRONES DEPLOYED</span>",
-        "> SUPPRESSING ALERTS... [MASKED]",
-        "> FILE RETRIEVED - PERSONNEL DOSSIER LOADED",
+        "> ESTABLISHING HOLONET UPLINK... [OK]",
+        "> ROUTING THROUGH ENDOR RELAY SUB-NODE... [SECURE]",
+        "> INITIATING SCOMP LINK OVERRIDE...",
+        "> BYPASSING ISB FIREWALL LAYER 1... [SUCCESS]",
+        "> DECRYPTING DATACRON ARCHIVES... [WARNING: TRACE DETECTED]",
+        "> <span class='text-yellow-500'>SPOOFING MAC ADDRESS. DEPLOYING COUNTER-MEASURES.</span>",
+        "> FILE RETRIEVED - IMPERIAL SECURITY BUREAU DOSSIER LOADED",
         "> ACCESS GRANTED - TERMINAL 47-B (CORUSCANT SHADOW NODE)"
     ];
 
@@ -199,19 +216,23 @@
         let headerHtml = '';
         if (currentState !== 'boot') {
             headerHtml = `
-                <div class="border-b border-red-800 p-4 flex justify-between items-center bg-red-950/40">
-                    <div class="flex items-center gap-4">
-                        <div class="imperial-crest w-8 h-8 bg-red-600 flex items-center justify-center">
-                            <div class="imperial-crest w-6 h-6 bg-black"></div>
+                <div class="border-b border-red-800 p-3 md:p-4 flex justify-between items-center bg-red-950/40 relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-10 pointer-events-none flex items-center justify-center">
+                        <span class="aurebesh text-6xl text-red-500">IMPERIAL</span>
+                    </div>
+                    <div class="flex items-center gap-3 md:gap-4 relative z-10">
+                        <div class="imperial-crest w-6 h-6 md:w-8 md:h-8 bg-red-600 flex items-center justify-center shrink-0">
+                            <div class="imperial-crest w-4 h-4 md:w-6 md:h-6 bg-black"></div>
                         </div>
                         <div>
-                            <h1 class="text-lg md:text-xl font-bold tracking-widest text-red-500">IMPERIAL CITIZEN DATABASE</h1>
-                            <p class="text-[10px] text-red-400/70 tracking-[0.2em]">CORUSCANT SHADOW NODE // TERMINAL 47-B</p>
+                            <h1 class="text-sm md:text-xl font-bold tracking-widest text-red-500 leading-tight">IMPERIAL SECURITY BUREAU</h1>
+                            <p class="text-[8px] md:text-[10px] text-red-400/70 tracking-[0.2em]">CORUSCANT SHADOW NODE // TERMINAL 47-B</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <button onclick="clearDatabase()" class="text-[9px] border border-red-900 px-2 py-1 hover:bg-red-600 hover:text-black transition-colors">WIPE LOCAL CACHE</button>
-                        <div class="text-right hidden sm:block">
+                    <div class="flex items-center gap-4 relative z-10">
+                        <button onclick="clearDatabase()" class="text-[9px] border border-red-900 px-2 py-1 hover:bg-red-600 hover:text-black transition-colors hidden sm:block">WIPE LOCAL CACHE</button>
+                        <button onclick="clearDatabase()" class="p-1 border border-red-900 hover:bg-red-600 hover:text-black transition-colors sm:hidden" title="Wipe Local Cache"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <div class="text-right hidden md:block">
                             <p class="text-xs text-red-500/80 uppercase">YEAR: 17 ABY</p>
                             <p class="text-[10px] text-red-500/60 uppercase animate-pulse">AUTO-SAVE: ACTIVE</p>
                         </div>
@@ -220,7 +241,7 @@
             `;
         }
 
-        appContainer.innerHTML = headerHtml + `<div id="content-area" class="p-4 md:p-8"></div>`;
+        appContainer.innerHTML = headerHtml + `<div id="content-area" class="p-3 md:p-8"></div>`;
         
         lucide.createIcons();
         const contentArea = document.getElementById('content-area');
@@ -232,7 +253,7 @@
     }
 
     async function runBootSequence(container) {
-        container.innerHTML = `<div id="boot-text" class="space-y-2 text-sm md:text-base font-mono"></div>`;
+        container.innerHTML = `<div id="boot-text" class="space-y-2 text-xs md:text-base font-mono"></div>`;
         const bootContainer = document.getElementById('boot-text');
         
         for (let i = 0; i < bootSequence.length; i++) {
@@ -246,27 +267,32 @@
 
     function renderWelcome() {
         return `
-            <div class="space-y-8 max-w-2xl mx-auto py-8">
+            <div class="space-y-8 max-w-2xl mx-auto py-4 md:py-8">
                 <div class="text-center space-y-4">
-                    <i data-lucide="database" class="mx-auto text-red-600 w-16 h-16 opacity-80 mb-4"></i>
-                    <h2 class="text-2xl font-bold text-center tracking-[0.2em] border-b border-red-800/50 pb-4 text-white">PERSONNEL FILE INJECTION</h2>
-                    <p class="text-sm leading-relaxed text-red-400">
-                        Welcome, Slicer. You have bypassed the primary security nodes. 
-                        Use this interface to inject a new identity into the Galactic Personnel Database. 
-                        Progress is automatically cached to your local terminal station.
+                    <i data-lucide="shield-alert" class="mx-auto text-red-600 w-12 h-12 md:w-16 md:h-16 opacity-80 mb-4"></i>
+                    <h2 class="text-lg md:text-2xl font-bold text-center tracking-[0.2em] border-b border-red-800/50 pb-4 text-white">ISB DATACRON UPLINK</h2>
+                    <p class="text-xs md:text-sm leading-relaxed text-red-400">
+                        Welcome, Operative. You have bypassed the primary security nodes via Scomp Link. 
+                        Use this interface to inject or alter a target identity within the Imperial Security Bureau's Galactic Database. 
+                        Progress is encrypted and cached locally.
                     </p>
                 </div>
                 
-                <div class="bg-red-950/20 border border-red-900/50 p-4 text-xs text-red-300 space-y-2 font-mono">
-                    <p>> FILE INTEGRITY: 98.7%</p>
-                    <p>> LAST ACCESSED: 17 ABY 03.18</p>
-                    <p>> CACHED DATA FOUND: ${Object.values(formData).some(v => v !== '') ? 'YES' : 'NO'}</p>
+                <div class="bg-red-950/20 border border-red-900/50 p-4 text-[10px] md:text-xs text-red-300 space-y-2 font-mono relative">
+                    <p>> ENCRYPTION: BESKAR-TIER [ACTIVE]</p>
+                    <p>> LAST SYNC: 17 ABY 03.18</p>
+                    <p>> LOCAL CACHE FRAGMENTS DETECTED: ${Object.values(formData).some(v => v !== '' && v !== 'LOW' && v !== 'Galactic Basic' && v !== 'No') ? '<span class="text-green-500">YES</span>' : '<span class="text-red-500">NO</span>'}</p>
+                    <div class="absolute right-4 top-4 opacity-20 text-4xl aurebesh">ISB</div>
                 </div>
 
-                <div class="pt-8 flex justify-center">
-                    <button onclick="setState('form')" class="px-8 py-3 bg-red-950 hover:bg-red-600 hover:text-black transition-colors border border-red-600 font-bold tracking-[0.2em] glitch-hover flex items-center gap-3 shadow-[0_0_15px_rgba(239,68,68,0.2)] text-sm">
-                        INITIALIZE OVERRIDE <i data-lucide="terminal" width="18"></i>
+                <div class="pt-4 flex flex-col sm:flex-row justify-center gap-4">
+                    <button onclick="setState('form')" class="px-6 py-3 bg-red-950 hover:bg-red-600 hover:text-black transition-colors border border-red-600 font-bold tracking-[0.2em] glitch-hover flex items-center justify-center gap-3 shadow-[0_0_15px_rgba(239,68,68,0.2)] text-xs md:text-sm w-full sm:w-auto">
+                        INITIALIZE OVERRIDE <i data-lucide="terminal-square" class="w-4 h-4"></i>
                     </button>
+                    ${Object.values(formData).some(v => v !== '' && v !== 'LOW' && v !== 'Galactic Basic' && v !== 'No') ? `
+                    <button onclick="clearDatabase()" class="px-6 py-3 bg-black hover:bg-red-900 transition-colors border border-red-900 text-red-500 font-bold tracking-[0.2em] flex items-center justify-center gap-3 text-xs md:text-sm w-full sm:w-auto">
+                        PURGE DATA <i data-lucide="flame" class="w-4 h-4"></i>
+                    </button>` : ''}
                 </div>
             </div>
         `;
@@ -274,26 +300,31 @@
 
     function renderForm() {
         return `
-            <div class="space-y-6">
+            <div class="space-y-4 md:space-y-6 flex flex-col h-[75vh] md:h-auto">
                 <!-- Form Navigation -->
-                <div class="flex flex-wrap border-b border-red-900 pb-2 gap-2 text-xs md:text-sm tracking-widest">
-                    <button onclick="currentFormStep=1; renderApp()" class="nav-btn px-3 py-1 border border-red-900 hover:bg-red-900/50 ${currentFormStep===1 ? 'active' : 'text-red-500'}">1. GENERAL</button>
-                    <button onclick="currentFormStep=2; renderApp()" class="nav-btn px-3 py-1 border border-red-900 hover:bg-red-900/50 ${currentFormStep===2 ? 'active' : 'text-red-500'}">2. PHYSICAL & GEAR</button>
-                    <button onclick="currentFormStep=3; renderApp()" class="nav-btn px-3 py-1 border border-red-900 hover:bg-red-900/50 ${currentFormStep===3 ? 'active' : 'text-red-500'}">3. PSYCH & FORCE</button>
-                    <button onclick="currentFormStep=4; renderApp()" class="nav-btn px-3 py-1 border border-red-900 hover:bg-red-900/50 ${currentFormStep===4 ? 'active' : 'text-red-500'}">4. BACKGROUND</button>
-                    <button onclick="currentFormStep=5; renderApp()" class="nav-btn px-3 py-1 border border-red-900 hover:bg-red-900/50 ${currentFormStep===5 ? 'active' : 'text-red-500'}">5. RESTRICTED/NSFW</button>
+                <div class="flex overflow-x-auto border-b border-red-900 pb-2 gap-1 md:gap-2 text-[10px] md:text-sm tracking-widest shrink-0 scrollbar-hide">
+                    <button onclick="currentFormStep=1; renderApp()" class="nav-btn px-2 md:px-3 py-1 border border-red-900 hover:bg-red-900/50 whitespace-nowrap ${currentFormStep===1 ? 'active' : 'text-red-500'}">1. GENERAL</button>
+                    <button onclick="currentFormStep=2; renderApp()" class="nav-btn px-2 md:px-3 py-1 border border-red-900 hover:bg-red-900/50 whitespace-nowrap ${currentFormStep===2 ? 'active' : 'text-red-500'}">2. PHYSICAL</button>
+                    <button onclick="currentFormStep=3; renderApp()" class="nav-btn px-2 md:px-3 py-1 border border-red-900 hover:bg-red-900/50 whitespace-nowrap ${currentFormStep===3 ? 'active' : 'text-red-500'}">3. PSYCH</button>
+                    <button onclick="currentFormStep=4; renderApp()" class="nav-btn px-2 md:px-3 py-1 border border-red-900 hover:bg-red-900/50 whitespace-nowrap ${currentFormStep===4 ? 'active' : 'text-red-500'}">4. BACKGROUND</button>
+                    <button onclick="currentFormStep=5; renderApp()" class="nav-btn px-2 md:px-3 py-1 border border-red-900 hover:bg-red-900/50 whitespace-nowrap ${currentFormStep===5 ? 'active' : 'text-red-500'}">5. RESTRICTED</button>
                 </div>
 
-                <div class="h-[60vh] overflow-y-auto pr-2 space-y-6">
+                <div class="flex-grow overflow-y-auto pr-1 md:pr-2 space-y-6 md:h-[50vh]">
                     ${getFormStepContent()}
                 </div>
 
-                <div class="pt-4 border-t border-red-900 flex justify-between items-center">
-                    <span class="text-xs text-red-500/50">STEP ${currentFormStep} OF 5</span>
-                    <div class="space-x-4">
-                        ${currentFormStep > 1 ? `<button onclick="currentFormStep--; renderApp()" class="px-4 py-2 border border-red-800 text-red-500 hover:bg-red-900/30 text-xs tracking-widest">PREV</button>` : ''}
-                        ${currentFormStep < 5 ? `<button onclick="currentFormStep++; renderApp()" class="px-6 py-2 bg-red-800/20 border border-red-500 text-red-400 hover:bg-red-600 hover:text-black text-xs tracking-widest font-bold">NEXT</button>` : ''}
-                        ${currentFormStep === 5 ? `<button onclick="generateDossier()" class="px-6 py-2 bg-red-600 text-black border border-red-500 hover:bg-white text-xs tracking-widest font-bold glitch-hover shadow-[0_0_10px_rgba(239,68,68,0.5)]">INJECT DOSSIER</button>` : ''}
+                <div class="pt-3 md:pt-4 border-t border-red-900 flex justify-between items-center gap-2 shrink-0">
+                    <button onclick="clearDatabase()" class="px-2 md:px-3 py-2 border border-red-900 text-red-600 hover:bg-red-600 hover:text-black text-[10px] md:text-xs tracking-widest flex items-center gap-1 transition-colors">
+                        <i data-lucide="rotate-ccw" class="w-3 h-3"></i> <span class="hidden sm:inline">RESET</span>
+                    </button>
+                    
+                    <span class="text-[10px] md:text-xs text-red-500/50 hidden md:block">SECTOR ${currentFormStep} OF 5</span>
+                    
+                    <div class="space-x-2 flex">
+                        ${currentFormStep > 1 ? `<button onclick="currentFormStep--; renderApp()" class="px-3 md:px-4 py-2 border border-red-800 text-red-500 hover:bg-red-900/30 text-[10px] md:text-xs tracking-widest">PREV</button>` : ''}
+                        ${currentFormStep < 5 ? `<button onclick="currentFormStep++; renderApp()" class="px-4 md:px-6 py-2 bg-red-800/20 border border-red-500 text-red-400 hover:bg-red-600 hover:text-black text-[10px] md:text-xs tracking-widest font-bold">NEXT</button>` : ''}
+                        ${currentFormStep === 5 ? `<button onclick="generateDossier()" class="px-4 md:px-6 py-2 bg-red-600 text-black border border-red-500 hover:bg-white text-[10px] md:text-xs tracking-widest font-bold glitch-hover shadow-[0_0_10px_rgba(239,68,68,0.5)]">INJECT FILE</button>` : ''}
                     </div>
                 </div>
             </div>
@@ -317,15 +348,16 @@
 
     function updateData(key, value) {
         formData[key] = value;
-        localStorage.setItem('sw_dossier_data', JSON.stringify(formData));
+        localStorage.setItem('sw_dossier_data_v2', JSON.stringify(formData));
         if(key === 'isForceSensitive') renderApp(); 
     }
 
     function clearDatabase() {
-        if(confirm("DANGER: This will permanently wipe your cached dossier progress. Continue?")) {
-            localStorage.removeItem('sw_dossier_data');
+        if(confirm("DANGER: This will permanently purge your cached dossier from this terminal. Continue?")) {
+            localStorage.removeItem('sw_dossier_data_v2');
             formData = {...defaultFormData};
-            renderApp();
+            currentFormStep = 1;
+            setState('welcome');
         }
     }
 
@@ -333,104 +365,129 @@
         switch(currentFormStep) {
             case 1:
                 return `
-                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mb-4 tracking-widest"><i data-lucide="user" class="inline w-4 h-4 mr-2"></i>GENERAL INFORMATION</h3>
+                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mb-4 tracking-widest text-sm md:text-base"><i data-lucide="user" class="inline w-4 h-4 mr-2"></i>SUBJECT IDENTIFICATION</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         ${createInput('Full Name', 'name', '[First and Last]')}
-                        ${createInput('Alias(es)', 'aliases', '[Nicknames or titles]')}
-                        ${createInput('Age', 'age', '[How old are they?]')}
-                        ${createInput('D.O.B.', 'dob', '[Current year is 17 ABY]')}
+                        ${createInput('Alias(es)', 'aliases', '[Nicknames, Call signs, Titles]')}
+                        ${createInput('Age', 'age', '[Standard Galactic Years]')}
+                        ${createInput('D.O.B.', 'dob', '[BBY/ABY format. Current year: 17 ABY]')}
                         ${createInput('Sex', 'sex', '[Biological sex]')}
                         ${createInput('Gender', 'gender', '[Identity]')}
-                        ${createInput('Sexual Orientation', 'orientation', '[Attraction]')}
-                        ${createInput('Species', 'species', '[No player-made species]')}
+                        ${createInput('Species', 'species', '[Known SW Species only]')}
                         ${createInput('Homeworld', 'homeworld', '[Planet of birth]')}
-                        ${createInput('Residence', 'residence', '[Current location]')}
-                        ${createInput('Occupation', 'occupation', '[Profession]')}
-                        ${createInput('Affiliation', 'affiliation', '[New Republic, Empire, Jedi, etc.]')}
+                        ${createInput('Current Residence', 'residence', '[Planet / System / Ship]')}
+                        ${createInput('Spoken Languages', 'languages', '[Basic, Huttese, Binary, etc.]')}
+                        ${createInput('Occupation', 'occupation', '[Smuggler, Jedi, Trooper, etc.]')}
+                        ${createInput('Affiliation', 'affiliation', '[New Republic, Remnant, Hutt Cartel, etc.]')}
                     </div>
-                    ${createInput('Galactic Reputation', 'reputation', '[What does the Galaxy know you for?]', 'text', true)}
-                    ${createInput('Criminal Record', 'criminalRecord', '[Committed crimes, if any]', 'text', true)}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div class="space-y-1">
+                            <label class="block text-[10px] uppercase tracking-widest text-red-500/80">> ISB Threat Level</label>
+                            <select class="w-full bg-black/50 border border-red-900/70 text-red-100 p-2 text-sm outline-none" onchange="updateData('threatLevel', this.value)">
+                                <option value="LOW" ${formData.threatLevel === 'LOW' ? 'selected' : ''}>Low (Civilian)</option>
+                                <option value="MODERATE" ${formData.threatLevel === 'MODERATE' ? 'selected' : ''}>Moderate (Local Nuisance)</option>
+                                <option value="HIGH" ${formData.threatLevel === 'HIGH' ? 'selected' : ''}>High (Wanted by Empire)</option>
+                                <option value="EXTREME" ${formData.threatLevel === 'EXTREME' ? 'selected' : ''}>Extreme (Kill on Sight)</option>
+                            </select>
+                        </div>
+                        ${createInput('Active Bounty', 'bounty', '[Amount in Imperial Credits]')}
+                    </div>
+                    <div class="mt-4 space-y-4">
+                        ${createInput('Galactic Reputation', 'reputation', '[What does the Galaxy/Underworld know you for?]', 'text', true)}
+                        ${createInput('Criminal Record', 'criminalRecord', '[Committed crimes against the Empire/Republic]', 'text', true)}
+                    </div>
                 `;
             case 2:
                 return `
-                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mb-4 tracking-widest"><i data-lucide="scan-line" class="inline w-4 h-4 mr-2"></i>PHYSICAL & EQUIPMENT</h3>
+                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mb-4 tracking-widest text-sm md:text-base"><i data-lucide="scan-line" class="inline w-4 h-4 mr-2"></i>BIOMETRICS & HARDWARE</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         ${createInput('Height', 'height', '[Imperial and Metric]')}
                         ${createInput('Weight', 'weight', '[Imperial and Metric]')}
                         ${createInput('Eye Color', 'eyeColor', '[Color]')}
-                        ${createInput('Skin Color', 'skinColor', '[Color]')}
-                        ${createInput('Hair', 'hair', '[Color and Style]')}
-                        ${createInput('Body Build', 'build', '[Skinny, muscular, etc.]')}
-                        ${createInput('Tattoos', 'tattoos', '[Description of tattoos]')}
-                        ${createInput('Scars', 'scars', '[Description of scars]')}
+                        ${createInput('Skin Color', 'skinColor', '[Color/Tone]')}
+                        ${createInput('Hair', 'hair', '[Color and Style/Lekku pattern]')}
+                        ${createInput('Body Build', 'build', '[Ectomorph, Mesomorph, etc.]')}
+                        ${createInput('Cybernetics', 'cybernetics', '[Prosthetic limbs, neural implants, etc.]')}
+                        ${createInput('Tattoos', 'tattoos', '[Description/Location of ink]')}
                     </div>
-                    ${createInput('Unique Features', 'uniqueFeatures', '[Birthmarks, cybernetics, etc.]', 'text', true)}
-                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mt-6 mb-4 tracking-widest"><i data-lucide="crosshair" class="inline w-4 h-4 mr-2"></i>ABILITIES & GEAR</h3>
-                    ${createInput('Talents', 'talents', '[Intelligence, Charisma, Tech Wizard, etc.]', 'text', true)}
-                    ${createInput('Skills', 'skills', '[Specific trainable skills]', 'text', true)}
-                    ${createInput('Weaknesses', 'weaknesses', '[Flaws, physical limitations]', 'text', true)}
-                    ${createInput('Weapons', 'weapons', '[Blasters, vibroblades, etc.]', 'text', true)}
-                    ${createInput('Armor', 'armor', '[Armor type/description]', 'text', true)}
-                    ${createInput('Attire', 'attire', '[Casual/formal clothing]', 'text', true)}
+                    <div class="mt-4">
+                        ${createInput('Scars / Unique Features', 'scars', '[Distinctive marks, battle damage, birthmarks]', 'text', true)}
+                    </div>
+                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mt-6 mb-4 tracking-widest text-sm md:text-base"><i data-lucide="crosshair" class="inline w-4 h-4 mr-2"></i>COMBAT & EQUIPMENT</h3>
+                    <div class="space-y-4">
+                        ${createInput('Natural Talents', 'talents', '[Innate abilities, e.g. High IQ, Charismatic]', 'text', true)}
+                        ${createInput('Trained Skills', 'skills', '[Acquired skills, e.g. Slicing, Piloting, Marksman]', 'text', true)}
+                        ${createInput('Weaknesses', 'weaknesses', '[Physical flaws, limitations]', 'text', true)}
+                        ${createInput('Primary Weapons', 'weapons', '[Blaster models, Vibro-weapons]', 'text', true)}
+                        ${createInput('Armor System', 'armor', '[Beskar, Plastoid, Durasteel, Shield Generators]', 'text', true)}
+                    </div>
                 `;
             case 3:
                 const forceStyle = formData.isForceSensitive === 'Yes' ? 'block' : 'hidden';
                 return `
-                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mb-4 tracking-widest"><i data-lucide="brain" class="inline w-4 h-4 mr-2"></i>PSYCHOLOGY</h3>
-                    ${createInput('Likes', 'likes', '[Must have at least 3 likes]', 'text', true)}
-                    ${createInput('Dislikes', 'dislikes', '[Must have at least 3 dislikes]', 'text', true)}
-                    ${createInput('Motivations', 'motivations', '[Need at least 2 motivations]', 'text', true)}
-                    ${createInput('Fears', 'fears', '[Must have at least 1 fear. Nobody is truly fearless]', 'text', true)}
-                    ${createInput('Mental Illness', 'mentalIllness', '[Any psychological conditions]', 'text', true)}
-                    ${createInput('Personality', 'personality', '[Must be at least 2 paragraphs long]', 'text', true)}
+                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mb-4 tracking-widest text-sm md:text-base"><i data-lucide="brain" class="inline w-4 h-4 mr-2"></i>PSYCHOLOGICAL PROFILE</h3>
+                    <div class="space-y-4">
+                        ${createInput('Likes', 'likes', '[List favorable stimuli/interests]', 'text', true)}
+                        ${createInput('Dislikes', 'dislikes', '[List aversions/hatreds]', 'text', true)}
+                        ${createInput('Core Motivations', 'motivations', '[What drives the subject? Wealth, Duty, Vengeance?]', 'text', true)}
+                        ${createInput('Fears / Phobias', 'fears', '[Psychological vulnerabilities]', 'text', true)}
+                        ${createInput('Mental Conditions', 'mentalIllness', '[PTSD, Paranoia, etc.]', 'text', true)}
+                        ${createInput('Full Personality Eval', 'personality', '[Detailed behavioral analysis]', 'text', true)}
+                    </div>
                     
-                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mt-6 mb-4 tracking-widest"><i data-lucide="swords" class="inline w-4 h-4 mr-2"></i>FORCE SENSITIVITY</h3>
+                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mt-6 mb-4 tracking-widest text-sm md:text-base"><i data-lucide="swords" class="inline w-4 h-4 mr-2"></i>FORCE ATTUNEMENT</h3>
                     <div class="space-y-1 mb-4">
-                        <label class="block text-[10px] uppercase tracking-widest text-red-500/80">> Is Subject Force Sensitive?</label>
+                        <label class="block text-[10px] uppercase tracking-widest text-red-500/80">> Is Subject Midichlorian Positive?</label>
                         <select id="isForceSensitive" class="w-full bg-black/50 border border-red-900/70 text-red-100 p-2 text-sm focus:border-red-500 outline-none" onchange="updateData('isForceSensitive', this.value)">
-                            <option value="No" ${formData.isForceSensitive === 'No' ? 'selected' : ''}>No</option>
-                            <option value="Yes" ${formData.isForceSensitive === 'Yes' ? 'selected' : ''}>Yes</option>
+                            <option value="No" ${formData.isForceSensitive === 'No' ? 'selected' : ''}>Negative (Standard)</option>
+                            <option value="Yes" ${formData.isForceSensitive === 'Yes' ? 'selected' : ''}>Positive (Force Sensitive)</option>
                         </select>
                     </div>
-                    <div class="${forceStyle} space-y-4 bg-red-950/10 p-4 border border-red-900/50">
-                        ${createInput('Force Alignment', 'forceAlignment', '[Light, Neutral, Dark]')}
-                        ${createInput('Force Abilities', 'forceAbilities', '[Specific powers known]', 'text', true)}
-                        ${createInput('Mastery Level', 'forceMastery', '[Padawan, Knight, Master, Sith Lord, etc.]')}
-                        ${createInput('Lightsaber Forms', 'lightsaberForms', '[Forms known]', 'text', true)}
+                    <div class="${forceStyle} space-y-4 bg-red-950/20 p-4 border border-red-900/50 shadow-inner">
+                        ${createInput('Force Alignment', 'forceAlignment', '[Ashla/Light, Bogan/Dark, Bendu/Neutral]')}
+                        ${createInput('Mastery Level', 'forceMastery', '[Padawan, Knight, Master, Acolyte, Lord]')}
+                        ${createInput('Known Force Abilities', 'forceAbilities', '[Telekinesis, Mind Trick, Force Lightning, etc.]', 'text', true)}
+                        ${createInput('Lightsaber Forms', 'lightsaberForms', '[Shii-Cho, Makashi, Soresu, etc.]', 'text', true)}
                     </div>
                 `;
             case 4:
                 return `
-                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mb-4 tracking-widest"><i data-lucide="book-open" class="inline w-4 h-4 mr-2"></i>BACKGROUND</h3>
-                    <div class="bg-red-900/10 border-l-2 border-red-600 p-3 mb-4 text-xs text-red-300">
-                        * Required: 3 paragraphs minimum. (5 paragraphs minimum for Force Users, Mandalorians, or significant figures).
+                    <h3 class="text-red-400 border-b border-red-900/50 pb-2 mb-4 tracking-widest text-sm md:text-base"><i data-lucide="rocket" class="inline w-4 h-4 mr-2"></i>ASSETS & BACKGROUND</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        ${createInput('Primary Vessel Name', 'shipName', '[e.g. Millennium Falcon]')}
+                        ${createInput('Vessel Class', 'shipClass', '[e.g. YT-1300 Light Freighter]')}
                     </div>
-                    ${createInput('Backstory', 'backstory', '[Enter detailed backstory here...]', 'text', true)}
-                    <div class="mt-6">
-                        ${createInput('Miscellaneous Notes', 'misc', '[Optional extra information...]', 'text', true)}
+
+                    <div class="bg-red-900/10 border-l-2 border-red-600 p-3 mb-4 text-[10px] md:text-xs text-red-300">
+                        * Required: Minimum 3 paragraphs detailing the subject's origins, major life events, and current status.
                     </div>
-                    <div class="mt-6">
-                        ${createInput('Writing Sample', 'writingSample', '[Optional unless Force Sensitive/Mando/Important Role. Provide a sample of your RP writing.]', 'text', true)}
+                    <div class="space-y-6">
+                        ${createInput('Historical Record (Backstory)', 'backstory', '[Enter detailed historical data here...]', 'text', true)}
+                        ${createInput('ISB Addendum / Notes', 'misc', '[Additional surveillance notes, associates, etc.]', 'text', true)}
+                        ${createInput('Comms Transcript (Writing Sample)', 'writingSample', '[Provide a sample of in-character dialogue/action]', 'text', true)}
                     </div>
                 `;
             case 5:
                 return `
-                    <h3 class="text-red-500 border-b border-red-900/50 pb-2 mb-4 tracking-widest font-bold flex items-center">
-                        <i data-lucide="alert-triangle" class="inline w-4 h-4 mr-2"></i>RESTRICTED PROTOCOLS (NSFW)
+                    <h3 class="text-red-500 border-b border-red-900/50 pb-2 mb-4 tracking-widest font-bold flex items-center text-sm md:text-base">
+                        <i data-lucide="alert-triangle" class="inline w-4 h-4 mr-2"></i>CLASSIFIED PROTOCOLS (NSFW)
                     </h3>
-                    <div class="bg-red-950 border border-red-800 p-4 mb-6 text-xs text-red-200 shadow-inner">
-                        > WARNING: Biological & psychological intimacy metrics are classified. <br>
-                        > These fields are dictated by Imperial Form Templates but are optional for standard deployment.
+                    <div class="bg-red-950 border border-red-800 p-3 md:p-4 mb-6 text-[10px] md:text-xs text-red-200 shadow-inner">
+                        > WARNING: Intimacy and reproductive metrics are classified under Imperial Eugenics Form 88-X.<br>
+                        > These fields are optional for standard combat deployment but required for Deep Cover operations.
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        ${createInput('Penis Size', 'penisSize', '[Measurement]')}
-                        ${createInput('Breast Size', 'breastSize', '[Measurement]')}
-                        ${createInput('Ass Size', 'assSize', '[Measurement]')}
+                        ${createInput('Genital Metrics (M)', 'penisSize', '[Measurement]')}
+                        ${createInput('Bust Metrics (F)', 'breastSize', '[Measurement]')}
+                        ${createInput('Gluteal Metrics', 'assSize', '[Measurement]')}
                     </div>
-                    ${createInput('Turn Ons', 'turnOns', '[List preferences]', 'text', true)}
-                    ${createInput('Turn Offs', 'turnOffs', '[List aversions]', 'text', true)}
-                    ${createInput('Kinks', 'kinks', '[List specific kinks]', 'text', true)}
-                    ${createInput('Limits', 'limits', '[Hard limits]', 'text', true)}
+                    <div class="space-y-4">
+                        ${createInput('Positive Stimuli (Turn Ons)', 'turnOns', '[List intimacy preferences]', 'text', true)}
+                        ${createInput('Negative Stimuli (Turn Offs)', 'turnOffs', '[List intimacy aversions]', 'text', true)}
+                        ${createInput('Deviations (Kinks)', 'kinks', '[List specific kinks]', 'text', true)}
+                        ${createInput('Hard Limits', 'limits', '[Absolute restrictions]', 'text', true)}
+                    </div>
                 `;
         }
     }
@@ -448,9 +505,9 @@
         if (cols === 4) colClass = 'col-span-1 md:col-span-4';
 
         return `
-            <div class="${colClass} doc-cell p-2 bg-white flex flex-col justify-start break-inside-avoid">
+            <div class="${colClass} doc-cell p-2 bg-white flex flex-col justify-start break-inside-avoid relative group">
                 <span class="text-[9px] uppercase font-bold text-gray-500 tracking-wider mb-1">${label}</span>
-                <span class="text-sm font-medium text-black break-words ${isTextarea ? 'whitespace-pre-wrap leading-relaxed' : ''}">${value}</span>
+                <span class="text-xs md:text-sm font-medium text-black break-words ${isTextarea ? 'whitespace-pre-wrap leading-relaxed' : ''}">${value}</span>
             </div>
         `;
     }
@@ -458,164 +515,268 @@
     function renderResult() {
         const idNum = Math.floor(Math.random() * 90000000) + 10000000;
         
+        let threatColor = 'text-gray-600';
+        if(formData.threatLevel === 'MODERATE') threatColor = 'text-yellow-600';
+        if(formData.threatLevel === 'HIGH') threatColor = 'text-orange-600';
+        if(formData.threatLevel === 'EXTREME') threatColor = 'text-red-600';
+
         return `
             <div class="space-y-6 pb-10">
                 <!-- Physical Document Container -->
-                <div id="capture-zone" class="bg-[#fafafa] text-black p-8 md:p-12 relative shadow-2xl mx-auto max-w-4xl border-[12px] border-gray-900 doc-font">
-                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] overflow-hidden">
-                        <div class="imperial-crest w-[800px] h-[800px] bg-black"></div>
+                <div id="capture-zone" class="bg-[#f0f0f0] text-black p-4 sm:p-8 md:p-12 relative shadow-2xl mx-auto max-w-4xl border-[16px] border-[#222] doc-font overflow-hidden">
+                    
+                    <!-- Background Watermarks -->
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.02]">
+                        <div class="imperial-crest w-[400px] h-[400px] md:w-[800px] md:h-[800px] bg-black"></div>
+                    </div>
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
+                        <span class="aurebesh text-[200px] md:text-[350px] font-bold tracking-tighter transform -rotate-45 text-black">ISB</span>
                     </div>
 
-                    <div class="relative z-10">
-                        <!-- HEADER -->
-                        <div class="flex flex-col sm:flex-row justify-between items-start border-b-4 border-black pb-6 mb-6">
-                            <div class="flex items-center gap-6">
-                                <div class="imperial-crest w-16 h-16 bg-black flex items-center justify-center">
-                                    <div class="imperial-crest w-12 h-12 bg-white flex items-center justify-center">
-                                        <div class="imperial-crest w-8 h-8 bg-black"></div>
+                    <!-- ISB Stamp -->
+                    <div class="isb-stamp top-12 right-12 md:top-24 md:right-24">ISB EYES ONLY</div>
+
+                    <div class="relative z-10 bg-[#fafafa] p-4 md:p-6 shadow-sm border border-gray-300">
+                        
+                        <!-- HEADER SECTION -->
+                        <div class="flex flex-col md:flex-row justify-between items-start border-b-4 border-black pb-4 md:pb-6 mb-6 gap-4">
+                            <!-- Left: Crest & Titles -->
+                            <div class="flex items-start gap-3 md:gap-5 flex-1">
+                                <div class="imperial-crest w-14 h-14 md:w-20 md:h-20 bg-black flex items-center justify-center shrink-0 mt-1">
+                                    <div class="imperial-crest w-10 h-10 md:w-14 md:h-14 bg-white flex items-center justify-center">
+                                        <div class="imperial-crest w-6 h-6 md:w-8 md:h-8 bg-black"></div>
                                     </div>
                                 </div>
-                                <div>
-                                    <h1 class="text-3xl md:text-4xl font-black tracking-tighter uppercase leading-none mb-1">Galactic Empire</h1>
-                                    <h2 class="text-xs md:text-sm font-bold tracking-[0.2em] text-gray-600 uppercase">Imperial Security Bureau // Form 47-B</h2>
-                                    <h3 class="text-xl font-bold mt-2 uppercase tracking-wide">Personnel Dossier</h3>
+                                <div class="flex-1">
+                                    <h1 class="text-2xl sm:text-3xl md:text-5xl font-black tracking-tighter uppercase leading-none mb-1 text-black">IMPERIAL SECURITY</h1>
+                                    <h2 class="text-[10px] md:text-sm font-bold tracking-[0.2em] text-gray-600 uppercase">Bureau of Intelligence // Form 47-B</h2>
+                                    <div class="mt-2 p-1 bg-black text-white inline-block">
+                                        <h3 class="text-sm sm:text-lg font-bold uppercase tracking-widest px-2">Official Dossier</h3>
+                                    </div>
+                                    <div class="mt-3 text-2xl md:text-3xl barcode text-black">|| |||| | || | ||| |</div>
+                                    <div class="text-[10px] md:text-xs font-bold mt-1 text-gray-500 uppercase tracking-widest">CHAIN ID: ${idNum}-${Math.floor(Math.random()*900)+100}</div>
                                 </div>
                             </div>
-                            <div class="text-right flex flex-col items-end mt-4 sm:mt-0">
-                                <div class="text-2xl barcode text-black mb-1">|| |||| | || | ||| |</div>
-                                <div class="text-[10px] font-bold uppercase border-2 border-black px-3 py-1 bg-red-600 text-white tracking-widest">
-                                    Classified Level 5
+
+                            <!-- Right: Mugshot & Threat -->
+                            <div class="flex flex-col items-center md:items-end gap-2 w-full md:w-auto">
+                                <div class="w-32 h-40 md:w-40 md:h-48 border-4 border-black bg-gray-200 flex flex-col items-center justify-center p-2 text-center relative overflow-hidden">
+                                    <i data-lucide="user" class="w-16 h-16 text-gray-400 mb-2"></i>
+                                    <span class="text-[8px] md:text-[10px] font-bold text-gray-500 uppercase">Biometric Scan<br>Pending Output</span>
+                                    <div class="absolute bottom-0 w-full bg-black text-white text-[8px] md:text-[9px] py-1 font-bold tracking-widest uppercase">ATTACH HOLO-IMAGE</div>
                                 </div>
-                                <div class="text-[10px] font-bold mt-2 text-gray-500 uppercase">ID: ${idNum}</div>
+                                <div class="w-full text-center border-2 border-black p-1 bg-white">
+                                    <span class="text-[9px] font-bold text-gray-500 uppercase block leading-none">THREAT LEVEL</span>
+                                    <span class="text-sm md:text-base font-black uppercase ${threatColor}">${formData.threatLevel}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AUREBESH NAME OVERLAY -->
+                        <div class="mb-4 bg-black text-white p-2 md:p-3 flex justify-between items-center">
+                            <div>
+                                <span class="text-[10px] uppercase text-gray-400 font-bold tracking-widest block mb-1">Subject Designation</span>
+                                <h2 class="text-lg md:text-2xl font-black uppercase tracking-wider">${formData.name}</h2>
+                            </div>
+                            <div class="text-right opacity-50">
+                                <span class="aurebesh text-xl md:text-3xl">${formData.name.substring(0, 15)}</span>
                             </div>
                         </div>
 
                         <!-- 1. BIOGRAPHICAL DATA -->
-                        <div class="mb-6">
-                            <h3 class="text-sm font-black uppercase bg-black text-white py-1 px-3 inline-block mb-2 tracking-widest">1. Biographical Data</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-4 doc-grid">
-                                ${renderDocField('Full Name', formData.name, 2)}
-                                ${renderDocField('Aliases', formData.aliases, 2)}
+                        <div class="mb-6 relative">
+                            <h3 class="text-xs md:text-sm font-black uppercase bg-gray-200 border-l-4 border-black text-black py-1 px-3 mb-2 tracking-widest flex items-center justify-between">
+                                <span>1. Biographical Data</span>
+                                <span class="text-[8px] text-gray-500">SEC-1</span>
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-4 doc-grid border-black border-2 bg-white">
+                                ${renderDocField('Aliases / Call Signs', formData.aliases, 2)}
+                                ${renderDocField('Species', formData.species, 1)}
+                                ${renderDocField('Sex/Gender', formData.sex + (formData.gender ? ' / ' + formData.gender : ''), 1)}
+                                
                                 ${renderDocField('Age', formData.age, 1)}
                                 ${renderDocField('D.O.B.', formData.dob, 1)}
-                                ${renderDocField('Sex', formData.sex, 1)}
-                                ${renderDocField('Gender', formData.gender, 1)}
-                                ${renderDocField('Species', formData.species, 2)}
-                                ${renderDocField('Homeworld', formData.homeworld, 2)}
-                                ${renderDocField('Residence', formData.residence, 2)}
-                                ${renderDocField('Orientation', formData.orientation, 2)}
-                                ${renderDocField('Occupation', formData.occupation, 4)}
-                                ${renderDocField('Affiliation', formData.affiliation, 4)}
+                                ${renderDocField('Homeworld', formData.homeworld, 1)}
+                                ${renderDocField('Current Residence', formData.residence, 1)}
+                                
+                                ${renderDocField('Known Languages', formData.languages, 2)}
+                                ${renderDocField('Active Bounty', formData.bounty ? formData.bounty + ' Credits' : '', 2)}
+                                
+                                ${renderDocField('Primary Occupation', formData.occupation, 2)}
+                                ${renderDocField('Faction / Affiliation', formData.affiliation, 2)}
                             </div>
                         </div>
 
                         <!-- 2. PHYSICAL CHARACTERISTICS -->
                         <div class="mb-6">
-                            <h3 class="text-sm font-black uppercase bg-black text-white py-1 px-3 inline-block mb-2 tracking-widest">2. Physical Profile</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-4 doc-grid">
+                            <h3 class="text-xs md:text-sm font-black uppercase bg-gray-200 border-l-4 border-black text-black py-1 px-3 mb-2 tracking-widest flex items-center justify-between">
+                                <span>2. Physical Profile & Hardware</span>
+                                <span class="text-[8px] text-gray-500">SEC-2</span>
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-4 doc-grid border-black border-2 bg-white">
                                 ${renderDocField('Height', formData.height, 1)}
                                 ${renderDocField('Weight', formData.weight, 1)}
                                 ${renderDocField('Eye Color', formData.eyeColor, 1)}
-                                ${renderDocField('Skin Color', formData.skinColor, 1)}
-                                ${renderDocField('Hair', formData.hair, 2)}
-                                ${renderDocField('Body Build', formData.build, 2)}
-                                ${renderDocField('Tattoos / Marks', formData.tattoos, 4, true)}
-                                ${renderDocField('Scars', formData.scars, 4, true)}
-                                ${renderDocField('Unique Features', formData.uniqueFeatures, 4, true)}
+                                ${renderDocField('Hair', formData.hair, 1)}
+                                
+                                ${renderDocField('Skin Tone', formData.skinColor, 1)}
+                                ${renderDocField('Body Build', formData.build, 1)}
+                                ${renderDocField('Cybernetics / Implants', formData.cybernetics, 2)}
+
+                                ${renderDocField('Tattoos & Markings', formData.tattoos, 2, true)}
+                                ${renderDocField('Scars & Unique Features', formData.scars, 2, true)}
                             </div>
                         </div>
 
-                        <!-- 3. CAPABILITIES & EQUIPMENT -->
+                        <!-- 3. CAPABILITIES & ASSETS -->
                         <div class="mb-6">
-                            <h3 class="text-sm font-black uppercase bg-black text-white py-1 px-3 inline-block mb-2 tracking-widest">3. Capabilities & Equipment</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-4 doc-grid">
-                                ${renderDocField('Known Talents', formData.talents, 2, true)}
+                            <h3 class="text-xs md:text-sm font-black uppercase bg-gray-200 border-l-4 border-black text-black py-1 px-3 mb-2 tracking-widest flex items-center justify-between">
+                                <span>3. Capabilities & Assets</span>
+                                <span class="text-[8px] text-gray-500">SEC-3</span>
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-4 doc-grid border-black border-2 bg-white">
                                 ${renderDocField('Trained Skills', formData.skills, 2, true)}
-                                ${renderDocField('Known Weaknesses', formData.weaknesses, 4, true)}
+                                ${renderDocField('Innate Talents', formData.talents, 2, true)}
+                                
                                 ${renderDocField('Primary Weapons', formData.weapons, 2, true)}
-                                ${renderDocField('Armor / Protection', formData.armor, 2, true)}
-                                ${renderDocField('Standard Attire', formData.attire, 4, true)}
+                                ${renderDocField('Known Weaknesses', formData.weaknesses, 2, true)}
+                                
+                                ${renderDocField('Armor System', formData.armor, 2, true)}
+                                ${renderDocField('Primary Vessel', formData.shipName ? formData.shipName + (formData.shipClass ? ' (' + formData.shipClass + ')' : '') : '', 2, true)}
                             </div>
                         </div>
 
                         <!-- 4. PSYCHOLOGICAL PROFILE -->
                         <div class="mb-6">
-                            <h3 class="text-sm font-black uppercase bg-black text-white py-1 px-3 inline-block mb-2 tracking-widest">4. Psychological Eval</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-4 doc-grid">
-                                ${renderDocField('Likes', formData.likes, 2, true)}
-                                ${renderDocField('Dislikes', formData.dislikes, 2, true)}
-                                ${renderDocField('Motivations', formData.motivations, 2, true)}
-                                ${renderDocField('Fears', formData.fears, 2, true)}
-                                ${renderDocField('Mental Illness / Conditions', formData.mentalIllness, 4, true)}
-                                ${renderDocField('Detailed Personality Assessment', formData.personality, 4, true)}
+                            <h3 class="text-xs md:text-sm font-black uppercase bg-gray-200 border-l-4 border-black text-black py-1 px-3 mb-2 tracking-widest flex items-center justify-between">
+                                <span>4. Psychological Evaluation</span>
+                                <span class="text-[8px] text-gray-500">SEC-4</span>
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-4 doc-grid border-black border-2 bg-white">
+                                ${renderDocField('Core Motivations', formData.motivations, 2, true)}
+                                ${renderDocField('Fears / Phobias', formData.fears, 2, true)}
+                                
+                                ${renderDocField('Favorable Stimuli (Likes)', formData.likes, 2, true)}
+                                ${renderDocField('Aversions (Dislikes)', formData.dislikes, 2, true)}
+                                
+                                ${renderDocField('Mental Conditions', formData.mentalIllness, 4, true)}
+                                ${renderDocField('Behavioral Assessment', formData.personality, 4, true)}
                             </div>
                         </div>
 
                         <!-- 5. FORCE SENSITIVITY -->
                         ${formData.isForceSensitive === 'Yes' ? `
-                            <div class="mb-6 border-4 border-gray-400 p-2 relative">
-                                <div class="absolute -top-3 left-4 bg-[#fafafa] px-2 text-xs font-bold text-gray-600 uppercase tracking-widest">Warning: Force Sensitive</div>
-                                <h3 class="text-sm font-black uppercase bg-gray-300 text-black py-1 px-3 inline-block mb-2 mt-2 tracking-widest">5. Force Attunement</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-4 doc-grid">
-                                    ${renderDocField('Alignment', formData.forceAlignment, 2)}
-                                    ${renderDocField('Mastery Level', formData.forceMastery, 2)}
-                                    ${renderDocField('Known Abilities', formData.forceAbilities, 4, true)}
-                                    ${renderDocField('Lightsaber Forms', formData.lightsaberForms, 4, true)}
+                            <div class="mb-6 bg-gray-800 p-2 md:p-3 relative text-white border-2 border-black">
+                                <div class="absolute -top-3 left-4 bg-red-600 px-3 py-1 text-[10px] md:text-xs font-black text-white uppercase tracking-widest shadow-md">CLASSIFIED: MIDICHLORIAN POSITIVE</div>
+                                <h3 class="text-xs md:text-sm font-black uppercase text-gray-300 py-1 mb-2 mt-3 tracking-widest border-b border-gray-600">5. Force Attunement</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-4 doc-grid border-gray-600 bg-gray-900">
+                                    <div class="col-span-1 md:col-span-2 doc-cell p-2 border-gray-600 flex flex-col">
+                                        <span class="text-[9px] uppercase font-bold text-gray-500 tracking-wider mb-1">Alignment</span>
+                                        <span class="text-xs md:text-sm font-medium text-red-400 break-words">${formData.forceAlignment || 'UNKNOWN'}</span>
+                                    </div>
+                                    <div class="col-span-1 md:col-span-2 doc-cell p-2 border-gray-600 flex flex-col">
+                                        <span class="text-[9px] uppercase font-bold text-gray-500 tracking-wider mb-1">Mastery Level</span>
+                                        <span class="text-xs md:text-sm font-medium text-white break-words">${formData.forceMastery || 'UNKNOWN'}</span>
+                                    </div>
+                                    <div class="col-span-1 md:col-span-4 doc-cell p-2 border-gray-600 flex flex-col">
+                                        <span class="text-[9px] uppercase font-bold text-gray-500 tracking-wider mb-1">Known Abilities</span>
+                                        <span class="text-xs md:text-sm font-medium text-white break-words whitespace-pre-wrap">${formData.forceAbilities || 'NONE LOGGED'}</span>
+                                    </div>
+                                    <div class="col-span-1 md:col-span-4 doc-cell p-2 border-gray-600 border-b-0 flex flex-col">
+                                        <span class="text-[9px] uppercase font-bold text-gray-500 tracking-wider mb-1">Combat Forms</span>
+                                        <span class="text-xs md:text-sm font-medium text-white break-words whitespace-pre-wrap">${formData.lightsaberForms || 'NONE LOGGED'}</span>
+                                    </div>
                                 </div>
                             </div>
                         ` : ''}
 
                         <!-- 6. HISTORICAL RECORD -->
                         <div class="mb-6">
-                            <h3 class="text-sm font-black uppercase bg-black text-white py-1 px-3 inline-block mb-2 tracking-widest">6. Historical Record & Background</h3>
-                            <div class="grid grid-cols-1 doc-grid">
+                            <h3 class="text-xs md:text-sm font-black uppercase bg-gray-200 border-l-4 border-black text-black py-1 px-3 mb-2 tracking-widest flex items-center justify-between">
+                                <span>6. Historical Record & Intelligence</span>
+                                <span class="text-[8px] text-gray-500">SEC-6</span>
+                            </h3>
+                            <div class="grid grid-cols-1 doc-grid border-black border-2 bg-white">
                                 ${renderDocField('Galactic Reputation', formData.reputation, 1, true)}
                                 ${renderDocField('Criminal Record', formData.criminalRecord, 1, true)}
-                                ${renderDocField('Full Backstory', formData.backstory, 1, true)}
+                                ${renderDocField('Full Historical Background', formData.backstory, 1, true)}
                             </div>
                         </div>
 
-                        <!-- 7. ADDENDUM -->
+                        <!-- 7. ADDENDUM (RESTRICTED) -->
                         ${(formData.penisSize || formData.turnOns || formData.misc || formData.writingSample) ? `
-                            <div class="mb-6">
-                                <h3 class="text-sm font-black uppercase bg-gray-200 text-gray-800 py-1 px-3 inline-block mb-2 tracking-widest">7. Addendum / Restricted Metrics</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-3 doc-grid">
-                                    ${renderDocField('Penis Size', formData.penisSize, 1)}
-                                    ${renderDocField('Breast Size', formData.breastSize, 1)}
-                                    ${renderDocField('Ass Size', formData.assSize, 1)}
+                            <div class="mb-6 border-2 border-red-900 bg-red-50 p-2">
+                                <h3 class="text-xs md:text-sm font-black uppercase bg-red-900 text-white py-1 px-3 mb-2 tracking-widest flex items-center justify-between">
+                                    <span>7. Deep Cover Metrics / Eugenics Form 88-X</span>
+                                    <span class="text-[8px] text-red-300">RESTRICTED</span>
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 doc-grid border-red-900 bg-white">
+                                    <div class="col-span-1 doc-cell p-2 border-red-900 flex flex-col">
+                                        <span class="text-[9px] uppercase font-bold text-red-700 tracking-wider mb-1">Genital Metrics (M)</span>
+                                        <span class="text-xs md:text-sm font-medium text-black break-words">${formData.penisSize || 'N/A'}</span>
+                                    </div>
+                                    <div class="col-span-1 doc-cell p-2 border-red-900 flex flex-col">
+                                        <span class="text-[9px] uppercase font-bold text-red-700 tracking-wider mb-1">Bust Metrics (F)</span>
+                                        <span class="text-xs md:text-sm font-medium text-black break-words">${formData.breastSize || 'N/A'}</span>
+                                    </div>
+                                    <div class="col-span-1 doc-cell p-2 border-red-900 flex flex-col">
+                                        <span class="text-[9px] uppercase font-bold text-red-700 tracking-wider mb-1">Gluteal Metrics</span>
+                                        <span class="text-xs md:text-sm font-medium text-black break-words">${formData.assSize || 'N/A'}</span>
+                                    </div>
                                 </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 doc-grid mt-4">
-                                    ${renderDocField('Turn Ons', formData.turnOns, 1, true)}
-                                    ${renderDocField('Turn Offs', formData.turnOffs, 1, true)}
-                                    ${renderDocField('Kinks', formData.kinks, 1, true)}
-                                    ${renderDocField('Limits', formData.limits, 1, true)}
+                                <div class="grid grid-cols-1 md:grid-cols-2 doc-grid border-red-900 bg-white mt-2">
+                                    <div class="col-span-1 doc-cell p-2 border-red-900 flex flex-col">
+                                        <span class="text-[9px] uppercase font-bold text-red-700 tracking-wider mb-1">Positive Stimuli</span>
+                                        <span class="text-xs md:text-sm font-medium text-black break-words whitespace-pre-wrap">${formData.turnOns || 'N/A'}</span>
+                                    </div>
+                                    <div class="col-span-1 doc-cell p-2 border-red-900 flex flex-col">
+                                        <span class="text-[9px] uppercase font-bold text-red-700 tracking-wider mb-1">Negative Stimuli</span>
+                                        <span class="text-xs md:text-sm font-medium text-black break-words whitespace-pre-wrap">${formData.turnOffs || 'N/A'}</span>
+                                    </div>
+                                    <div class="col-span-1 doc-cell p-2 border-red-900 flex flex-col">
+                                        <span class="text-[9px] uppercase font-bold text-red-700 tracking-wider mb-1">Deviations (Kinks)</span>
+                                        <span class="text-xs md:text-sm font-medium text-black break-words whitespace-pre-wrap">${formData.kinks || 'N/A'}</span>
+                                    </div>
+                                    <div class="col-span-1 doc-cell p-2 border-red-900 flex flex-col">
+                                        <span class="text-[9px] uppercase font-bold text-red-700 tracking-wider mb-1">Hard Limits</span>
+                                        <span class="text-xs md:text-sm font-medium text-black break-words whitespace-pre-wrap">${formData.limits || 'N/A'}</span>
+                                    </div>
                                 </div>
-                                <div class="grid grid-cols-1 doc-grid mt-4">
-                                    ${renderDocField('Miscellaneous Notes', formData.misc, 1, true)}
-                                    ${renderDocField('Writing Sample / Transcript', formData.writingSample, 1, true)}
+                                <div class="grid grid-cols-1 doc-grid border-red-900 bg-white mt-2">
+                                    <div class="col-span-1 doc-cell p-2 border-red-900 flex flex-col">
+                                        <span class="text-[9px] uppercase font-bold text-red-700 tracking-wider mb-1">Agent Notes / Misc</span>
+                                        <span class="text-xs md:text-sm font-medium text-black break-words whitespace-pre-wrap">${formData.misc || 'NONE'}</span>
+                                    </div>
+                                    <div class="col-span-1 doc-cell p-2 border-red-900 flex flex-col">
+                                        <span class="text-[9px] uppercase font-bold text-red-700 tracking-wider mb-1">Comms Transcript / Comm-log</span>
+                                        <span class="text-xs md:text-sm font-medium text-black break-words whitespace-pre-wrap italic">${formData.writingSample || 'NO DATA'}</span>
+                                    </div>
                                 </div>
                             </div>
                         ` : ''}
 
                         <!-- FOOTER -->
-                        <div class="border-t-4 border-black pt-4 mt-8 flex justify-between items-end">
-                            <div class="text-[10px] font-bold uppercase text-gray-500 tracking-widest">
-                                <p>Form Authorized by: Coruscant Central Node</p>
-                                <p>Date: 17 ABY</p>
+                        <div class="border-t-4 border-black pt-4 mt-8 flex flex-col sm:flex-row justify-between items-center sm:items-end gap-4">
+                            <div class="text-[9px] md:text-[10px] font-bold uppercase text-gray-700 tracking-widest text-center sm:text-left">
+                                <p>Form Authorized by: Coruscant Intelligence Directorate</p>
+                                <p>Transmission Date: 17 ABY</p>
+                                <p class="mt-1 text-red-600 aurebesh text-[8px]">GLORY TO THE EMPIRE</p>
                             </div>
-                            <div class="text-center">
-                                <div class="w-48 border-b-2 border-black mb-1 h-8 bg-[url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"30\"><path d=\"M10 20 Q 30 5 50 20 T 90 20\" fill=\"none\" stroke=\"black\" stroke-width=\"2\"/></svg>')] bg-no-repeat bg-center opacity-40"></div>
-                                <p class="text-[9px] uppercase font-bold text-gray-600">Authorized Signature</p>
+                            <div class="text-center w-full sm:w-auto flex flex-col items-center">
+                                <div class="w-40 md:w-56 border-b-2 border-black mb-1 h-8 md:h-12 bg-[url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"150\" height=\"40\"><path d=\"M10 30 Q 40 5 70 25 T 140 15\" fill=\"none\" stroke=\"%23333\" stroke-width=\"3\"/><path d=\"M20 20 Q 50 10 80 30 T 130 10\" fill=\"none\" stroke=\"%23666\" stroke-width=\"1.5\"/></svg>')] bg-no-repeat bg-center opacity-60"></div>
+                                <p class="text-[8px] md:text-[9px] uppercase font-bold text-gray-800 tracking-widest">Supervising Officer Signature</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex flex-col sm:flex-row gap-4 pt-6 max-w-4xl mx-auto">
-                    <button onclick="currentFormStep=1; setState('form')" class="flex-1 py-3 border border-red-800 text-red-500 uppercase font-bold text-xs hover:bg-red-900/30 transition-colors tracking-widest"><i data-lucide="edit-3" class="inline w-4 h-4 mr-2"></i>Edit Dossier</button>
-                    <button onclick="copyToDiscord()" id="copy-btn" class="flex-1 py-3 bg-red-600 text-black uppercase font-bold text-xs hover:bg-white transition-all shadow-[0_0_15px_rgba(239,68,68,0.4)] tracking-widest flex items-center justify-center"><i data-lucide="printer" class="inline w-4 h-4 mr-2"></i>Print to Datapad (Export)</button>
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3 md:gap-4 pt-4 md:pt-6 max-w-4xl mx-auto">
+                    <button onclick="currentFormStep=1; setState('form')" class="flex-1 py-3 md:py-4 border border-red-800 text-red-500 uppercase font-bold text-[10px] md:text-xs hover:bg-red-900/30 transition-colors tracking-widest"><i data-lucide="edit-3" class="inline w-4 h-4 mr-2"></i>Amend File</button>
+                    <button onclick="copyToDiscord()" id="copy-btn" class="flex-1 py-3 md:py-4 bg-red-600 text-black uppercase font-bold text-[10px] md:text-xs hover:bg-white transition-all shadow-[0_0_15px_rgba(239,68,68,0.4)] tracking-widest flex items-center justify-center"><i data-lucide="printer" class="inline w-4 h-4 mr-2"></i>Export Datacron (Image)</button>
+                    <button onclick="clearDatabase()" class="flex-1 py-3 md:py-4 border border-red-900 text-red-900 uppercase font-bold text-[10px] md:text-xs hover:bg-red-900 hover:text-white transition-colors tracking-widest"><i data-lucide="trash" class="inline w-4 h-4 mr-2"></i>Purge File & Restart</button>
                 </div>
-                <div id="copy-status" class="text-center text-sm font-bold opacity-0 transition-opacity mt-4 tracking-widest"></div>
+                <div id="copy-status" class="text-center text-[10px] md:text-sm font-bold opacity-0 transition-opacity mt-4 tracking-widest h-4"></div>
             </div>
         `;
     }
@@ -625,6 +786,7 @@
         renderApp(); 
         if (newState === 'result') {
             setTimeout(() => lucide.createIcons(), 50);
+            window.scrollTo(0, 0); 
         }
     }
 
@@ -632,35 +794,40 @@
         const btn = document.getElementById('copy-btn');
         const target = document.getElementById('capture-zone');
         const originalText = btn.innerHTML;
-        btn.innerHTML = `<i data-lucide="loader" class="inline w-4 h-4 mr-2 animate-spin"></i>PRINTING...`;
+        btn.innerHTML = `<i data-lucide="loader" class="inline w-4 h-4 mr-2 animate-spin"></i>ENCRYPTING...`;
         btn.disabled = true;
+
+        window.scrollTo(0, 0);
 
         try {
             await new Promise(r => setTimeout(r, 100));
             const canvas = await html2canvas(target, { 
                 backgroundColor: '#ffffff', 
-                scale: 2,
+                scale: 2, 
                 useCORS: true,
-                logging: false
+                allowTaint: true,
+                logging: false,
+                windowWidth: target.scrollWidth,
+                windowHeight: target.scrollHeight
             });
             
             canvas.toBlob(async (blob) => {
                 try {
                     const item = new ClipboardItem({ "image/png": blob });
                     await navigator.clipboard.write([item]);
-                    showStatus("DOCUMENT TRANSFERRED TO CLIPBOARD", "text-green-500");
+                    showStatus("DATACRON TRANSFERRED TO CLIPBOARD", "text-green-500");
                 } catch {
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
-                    link.download = `Imperial_Dossier_${formData.name.replace(/\s+/g, '_') || 'Subject'}.png`;
+                    link.download = `ISB_Dossier_${formData.name.replace(/\s+/g, '_') || 'Subject'}.png`;
                     link.href = url;
                     link.click();
-                    showStatus("CLIPBOARD BLOCKED. DOCUMENT DOWNLOADED.", "text-yellow-500");
+                    showStatus("CLIPBOARD BLOCKED. DATACRON DOWNLOADED.", "text-yellow-500");
                 }
             });
         } catch(err) {
             console.error(err);
-            showStatus("PRINTING ERROR.", "text-red-500");
+            showStatus("ENCRYPTION ERROR.", "text-red-500");
         } finally {
             btn.innerHTML = originalText;
             btn.disabled = false;
@@ -672,7 +839,7 @@
         const status = document.getElementById('copy-status');
         if(!status) return;
         status.textContent = msg;
-        status.className = `text-center text-xs font-bold uppercase mt-4 transition-opacity opacity-100 ${cls} tracking-widest`;
+        status.className = `text-center text-[10px] md:text-xs font-bold uppercase mt-4 transition-opacity opacity-100 ${cls} tracking-widest h-4`;
         setTimeout(() => status.classList.replace('opacity-100', 'opacity-0'), 4000);
     }
 
